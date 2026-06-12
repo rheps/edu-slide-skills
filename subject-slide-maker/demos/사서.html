@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>정보 활용과 도서 분류 · 사서 데모</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap');
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+  /* ===== 사서 테마 ===== */
+  :root {
+    --bg:#f8f5ee; --bg-dark:#1f2a24; --surface:#fffdf7;
+    --text:#23231d; --text-dark:#ebe7da; --subtext:#665f52;
+    --accent:#15803d; --accent-2:#92400e; --accent-3:#a16207;
+    --line:#ddd5c4; --accent-soft:#e9f1e7;
+    --font-display:'Noto Serif KR'; --font-body:'Gowun Batang'; --font-data:'Pretendard';
+  }
+  * { word-break:keep-all; overflow-wrap:break-word; box-sizing:border-box; margin:0; padding:0; }
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); }
+  .slide{ position:absolute; inset:0; width:100vw; height:100vh; overflow:hidden; display:none;
+    flex-direction:column; align-items:center; justify-content:center; padding:5vh 8vw;
+    background:var(--bg); color:var(--text); font-family:var(--font-body); }
+  .slide.active{ display:flex; } .slide.dark{ background:var(--bg-dark); color:var(--text-dark); }
+  h1{ font-family:var(--font-display); font-weight:900; font-size:6.6vh; line-height:1.16; text-align:center; }
+  .dark h1{ color:#fff; }
+  h2{ font-family:var(--font-display); font-weight:900; font-size:4.4vh; color:var(--accent); text-align:center; }
+  .eyebrow{ font-family:var(--font-display); font-weight:700; font-size:2.2vh; letter-spacing:.08em; color:var(--accent); margin-bottom:2vh; }
+  .lead{ font-family:var(--font-body); font-size:2.5vh; color:var(--subtext); margin-top:2.4vh; text-align:center; max-width:66vw; line-height:1.7; }
+  .dark .lead{ color:#b3c2b4; }
+  .num{ font-family:var(--font-data); }
+  .unit-no{ font-family:var(--font-data); font-weight:700; font-size:2.4vh; color:#86c79b; letter-spacing:.08em; }
+  .secnum{ font-family:var(--font-data); font-weight:700; font-size:2.4vh; color:#86c79b; margin-bottom:1.5vh; }
+  .goals{ list-style:none; display:flex; flex-direction:column; gap:2.4vh; margin-top:4vh; }
+  .goals li{ font-size:2.8vh; display:flex; align-items:center; gap:1.4vw; }
+  .goals li::before{ content:""; width:1.4vh; height:1.4vh; background:var(--accent); flex:none; }
+  .fragment{ opacity:0; transition:opacity .4s ease; } .fragment.visible{ opacity:1; }
+
+  /* KDC 분류 트리 (계층) */
+  .sa-tree{ display:flex; flex-direction:column; align-items:center; }
+  .sa-tree-root{ padding:2vh 4vw; font-family:var(--font-display); font-weight:900; font-size:3vh; background:var(--accent); color:#fff; border-radius:12px; }
+  .sa-tree-row{ display:flex; gap:2.4vw; margin-top:5.5vh; position:relative; }
+  .sa-tree-row::before{ content:""; position:absolute; top:-5.5vh; left:50%; width:3px; height:3vh; background:var(--line); transform:translateX(-50%); }
+  .sa-branch{ position:relative; }
+  .sa-branch::before{ content:""; position:absolute; top:-2.5vh; left:50%; width:3px; height:2.5vh; background:var(--line); transform:translateX(-50%); }
+  .sa-tree-row::after{ content:""; position:absolute; top:-2.5vh; left:10%; right:10%; height:3px; background:var(--line); }
+  .sa-node{ background:var(--surface); border:2px solid var(--line); border-radius:12px; padding:1.8vh 2vw; text-align:center; }
+  .sa-node .kdc{ font-family:var(--font-data); font-weight:700; font-size:2.6vh; color:#fff; background:var(--accent-3); border-radius:6px; padding:.2vh 1vw; }
+  .sa-node .nm{ font-family:var(--font-display); font-weight:700; font-size:2.4vh; display:block; margin-top:1vh; }
+
+  /* Big6 절차 (프로세스 6단계) */
+  .sa-process{ display:flex; width:94vw; }
+  .sa-step{ position:relative; flex:1; padding:2.6vh 1vw 2.6vh 1.8vw; background:var(--accent-soft);
+    clip-path:polygon(0 0, calc(100% - 1.2vw) 0, 100% 50%, calc(100% - 1.2vw) 100%, 0 100%, 1.2vw 50%); margin-right:-.9vw; }
+  .sa-step:first-child{ clip-path:polygon(0 0, calc(100% - 1.2vw) 0, 100% 50%, calc(100% - 1.2vw) 100%, 0 100%); }
+  .sa-step:nth-child(2n){ background:color-mix(in srgb, var(--accent) 14%, var(--surface)); }
+  .sa-step-no{ display:inline-flex; align-items:center; justify-content:center; width:3.6vh; height:3.6vh; border-radius:50%;
+    background:var(--accent); color:#fff; font-family:var(--font-data); font-weight:700; font-size:1.9vh; }
+  .sa-step-t{ font-family:var(--font-display); font-weight:700; font-size:2.1vh; margin-top:1vh; }
+
+  /* 출처/인용 카드 (책등 모티프) */
+  .lib-cites{ display:flex; flex-direction:column; gap:2.4vh; width:66vw; }
+  .lib-cite{ background:var(--surface); border:2px solid var(--line); border-left:10px solid var(--accent); border-radius:10px; padding:2.6vh 2.4vw; display:flex; align-items:center; gap:2vw; }
+  .lc-type{ font-family:var(--font-display); font-weight:700; font-size:2.2vh; color:#fff; background:var(--accent-2); border-radius:8px; padding:.6vh 1.4vw; flex:none; }
+  .lc-body{ font-family:var(--font-body); font-size:2.3vh; }
+  .lib-cite:nth-child(2n){ border-left-color:var(--accent-2); }
+
+  /* 정보 평가 매트릭스 */
+  .sa-matrix{ display:grid; grid-template-columns:auto 1fr; grid-template-rows:1fr auto; gap:1.2vh; width:66vw; }
+  .sa-mx-grid{ grid-column:2; grid-row:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:1.4vh; height:52vh; }
+  .sa-mx-cell{ display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:14px; border:2px solid var(--line); background:var(--surface); text-align:center; padding:1vh; }
+  .sa-mx-cell b{ font-family:var(--font-display); font-weight:900; font-size:2.4vh; color:var(--text); }
+  .sa-mx-cell p{ font-family:var(--font-body); font-size:1.9vh; color:var(--subtext); margin-top:.5vh; }
+  .sa-mx-cell.hl{ background:var(--accent-soft); border-color:var(--accent); }
+  .sa-mx-yaxis{ grid-column:1; grid-row:1; writing-mode:vertical-rl; text-align:center; font-family:var(--font-display); font-weight:700; color:var(--subtext); font-size:2vh; }
+  .sa-mx-xaxis{ grid-column:2; grid-row:2; text-align:center; font-family:var(--font-display); font-weight:700; color:var(--subtext); font-size:2vh; }
+
+  .keychips{ display:flex; flex-wrap:wrap; gap:1.4vh 1.4vw; justify-content:center; max-width:80vw; margin-top:3vh; }
+  .keychips span{ font-family:var(--font-display); font-weight:700; font-size:2.4vh; color:var(--accent);
+    background:var(--accent-soft); border:2px solid var(--accent); border-radius:8px; padding:1vh 2vw; }
+  .hud{ position:fixed; right:2vw; bottom:2.4vh; font-family:var(--font-data); font-size:1.8vh; color:var(--subtext); z-index:9; }
+</style>
+</head>
+<body>
+
+<section class="slide dark">
+  <div class="unit-no">정보와 매체 · 도서관 활용</div>
+  <h1>정보 활용과<br>도서 분류</h1>
+  <p class="lead">필요한 정보를 어떻게 찾고, 가려내고, 바르게 쓸 것인가</p>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">학습목표</div>
+  <ul class="goals">
+    <li class="fragment">KDC 분류 체계를 이해한다</li>
+    <li class="fragment">정보 활용 6단계를 안다</li>
+    <li class="fragment">출처를 바르게 표기한다</li>
+  </ul>
+</section>
+
+<section class="slide dark"><div class="secnum num">1</div><h1>책은 어떻게 정리되나 — KDC</h1></section>
+
+<!-- KDC 분류 트리 -->
+<section class="slide">
+  <h2 style="margin-bottom:1vh;">한국십진분류법 (KDC)</h2>
+  <div class="sa-tree">
+    <div class="sa-tree-root">KDC 10개 주제</div>
+    <div class="sa-tree-row">
+      <div class="sa-branch fragment"><div class="sa-node"><span class="kdc">0</span><span class="nm">총류</span></div></div>
+      <div class="sa-branch fragment"><div class="sa-node"><span class="kdc">3</span><span class="nm">사회과학</span></div></div>
+      <div class="sa-branch fragment"><div class="sa-node"><span class="kdc">5</span><span class="nm">기술과학</span></div></div>
+      <div class="sa-branch fragment"><div class="sa-node"><span class="kdc">8</span><span class="nm">문학</span></div></div>
+      <div class="sa-branch fragment"><div class="sa-node"><span class="kdc">9</span><span class="nm">역사</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide dark"><div class="secnum num">2</div><h1>정보를 다루는 여섯 걸음</h1></section>
+
+<!-- Big6 절차 -->
+<section class="slide">
+  <h2 style="margin-bottom:4vh;">정보 활용 과정 (Big6)</h2>
+  <div class="sa-process">
+    <div class="sa-step fragment"><span class="sa-step-no">1</span><div class="sa-step-t">과제 정의</div></div>
+    <div class="sa-step fragment"><span class="sa-step-no">2</span><div class="sa-step-t">정보 탐색</div></div>
+    <div class="sa-step fragment"><span class="sa-step-no">3</span><div class="sa-step-t">소재 파악</div></div>
+    <div class="sa-step fragment"><span class="sa-step-no">4</span><div class="sa-step-t">정보 활용</div></div>
+    <div class="sa-step fragment"><span class="sa-step-no">5</span><div class="sa-step-t">종합 정리</div></div>
+    <div class="sa-step fragment"><span class="sa-step-no">6</span><div class="sa-step-t">평가</div></div>
+  </div>
+</section>
+
+<!-- 정보 평가 매트릭스 -->
+<section class="slide">
+  <h2 style="margin-bottom:3vh;">이 정보, 써도 될까</h2>
+  <div class="sa-matrix">
+    <div class="sa-mx-yaxis">높음 ↑ 신뢰성 ↓ 낮음</div>
+    <div class="sa-mx-grid">
+      <div class="sa-mx-cell hl fragment"><b>바로 활용</b><p>신뢰 ○ · 관련 ○</p></div>
+      <div class="sa-mx-cell fragment"><b>참고만</b><p>신뢰 ○ · 관련 △</p></div>
+      <div class="sa-mx-cell fragment"><b>교차 확인</b><p>신뢰 △ · 관련 ○</p></div>
+      <div class="sa-mx-cell fragment"><b>사용 보류</b><p>신뢰 △ · 관련 △</p></div>
+    </div>
+    <div class="sa-mx-xaxis">낮음 ← 관련성 → 높음</div>
+  </div>
+</section>
+
+<!-- 출처/인용 카드 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.4vh;">출처는 이렇게 밝힌다</h2>
+  <div class="lib-cites">
+    <div class="lib-cite fragment"><div class="lc-type">단행본</div><div class="lc-body">저자(연도). <i>서명</i>. 출판사.</div></div>
+    <div class="lib-cite fragment"><div class="lc-type">웹자료</div><div class="lc-body">기관명(연도). 제목. URL (검색일).</div></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">단원 정리</div><h2>핵심 키워드</h2>
+  <div class="keychips">
+    <span class="fragment">KDC 십진분류</span>
+    <span class="fragment">정보 활용 6단계</span>
+    <span class="fragment">신뢰성 · 관련성</span>
+    <span class="fragment">교차 확인</span>
+    <span class="fragment">출처 표기</span>
+  </div>
+</section>
+
+<div class="hud"><span id="cur" class="num">1</span> / <span id="tot" class="num">10</span></div>
+<script>
+  const slides=[...document.querySelectorAll('.slide')]; const elCur=document.getElementById('cur'), elTot=document.getElementById('tot');
+  let cur=0; elTot.textContent=slides.length;
+  function show(){ slides.forEach((s,i)=>s.classList.toggle('active', i===cur)); elCur.textContent=cur+1; }
+  function frags(s){ return [...s.querySelectorAll('.fragment:not(.visible)')]; }
+  function next(){ const s=slides[cur], f=frags(s); if(f.length){ f[0].classList.add('visible'); return; } if(cur<slides.length-1){ cur++; show(); } }
+  function prev(){ const s=slides[cur], v=[...s.querySelectorAll('.fragment.visible')]; if(v.length){ v[v.length-1].classList.remove('visible'); return; } if(cur>0){ cur--; show(); slides[cur].querySelectorAll('.fragment').forEach(f=>f.classList.add('visible')); } }
+  addEventListener('keydown', e=>{ if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); } else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); } else if(e.key==='Home'){ cur=0; show(); } else if(e.key==='End'){ cur=slides.length-1; show(); } });
+  addEventListener('click', e=>{ e.clientX < innerWidth/2 ? prev() : next(); });
+  show();
+</script>
+</body>
+</html>

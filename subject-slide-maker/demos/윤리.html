@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>옳고 그름의 기준 · 윤리 데모</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap');
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+  /* ===== 윤리 테마 ===== */
+  :root {
+    --bg:#f8f7fb; --bg-dark:#1e1b2e; --surface:#ffffff;
+    --text:#221f2e; --text-dark:#e7e3f0; --subtext:#5b5670;
+    --accent:#5b21b6; --accent-2:#475569; --accent-3:#b45309;
+    --line:#dcd7e6; --accent-soft:#efeafb;
+    --font-display:'Noto Serif KR'; --font-body:'Gowun Batang'; --font-data:'Pretendard';
+  }
+  * { word-break:keep-all; overflow-wrap:break-word; box-sizing:border-box; margin:0; padding:0; }
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); }
+  .slide{ position:absolute; inset:0; width:100vw; height:100vh; overflow:hidden; display:none;
+    flex-direction:column; align-items:center; justify-content:center; padding:5vh 8vw;
+    background:var(--bg); color:var(--text); font-family:var(--font-body); }
+  .slide.active{ display:flex; } .slide.dark{ background:var(--bg-dark); color:var(--text-dark); }
+  h1{ font-family:var(--font-display); font-weight:900; font-size:6.6vh; line-height:1.16; text-align:center; }
+  .dark h1{ color:#fff; }
+  h2{ font-family:var(--font-display); font-weight:900; font-size:4.4vh; color:var(--accent); text-align:center; }
+  .eyebrow{ font-family:var(--font-display); font-weight:700; font-size:2.2vh; letter-spacing:.05em; color:var(--accent); margin-bottom:2vh; }
+  .lead{ font-family:var(--font-body); font-size:2.6vh; color:var(--subtext); margin-top:2.6vh; text-align:center; max-width:66vw; line-height:1.7; }
+  .dark .lead{ color:#b8b2cc; }
+  .num{ font-family:var(--font-data); }
+  .unit-no{ font-family:var(--font-data); font-size:2.6vh; color:#a78bfa; letter-spacing:.08em; }
+  .secnum{ font-family:var(--font-data); font-size:2.4vh; color:#a78bfa; margin-bottom:1.5vh; }
+  .goals{ list-style:none; display:flex; flex-direction:column; gap:2.4vh; margin-top:4vh; }
+  .goals li{ font-size:2.9vh; display:flex; align-items:center; gap:1.4vw; }
+  .goals li::before{ content:""; width:1.4vh; height:1.4vh; border-radius:50%; background:var(--accent); flex:none; }
+  .fragment{ opacity:0; transition:opacity .4s ease; } .fragment.visible{ opacity:1; }
+
+  /* 사상가 카드 */
+  .eth-thinkers{ display:flex; gap:3vw; }
+  .eth-thinker{ background:var(--surface); border:2px solid var(--line); border-radius:18px; padding:4vh 3vw; width:34vw; text-align:center; }
+  .et-bust{ width:11vh; height:11vh; border-radius:50%; background:var(--accent); color:#fff; margin:0 auto 2vh;
+    display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:900; font-size:4.4vh; }
+  .eth-thinker.alt .et-bust{ background:var(--accent-2); }
+  .et-name{ font-family:var(--font-display); font-weight:900; font-size:3.4vh; }
+  .et-dates{ font-family:var(--font-data); font-size:1.9vh; color:var(--subtext); margin:.6vh 0 1.8vh; }
+  .et-core{ font-family:var(--font-body); font-size:2.4vh; color:var(--accent); line-height:1.6; }
+  .eth-thinker.alt .et-core{ color:var(--accent-2); }
+
+  /* 비교 */
+  .sa-compare{ display:flex; align-items:stretch; gap:2vw; width:82vw; }
+  .sa-cmp-col{ flex:1; background:var(--accent-soft); border-radius:16px; padding:3.4vh 2.4vw; }
+  .sa-cmp-col.alt{ background:color-mix(in srgb, var(--accent-2) 12%, var(--surface)); }
+  .sa-cmp-col h3{ font-family:var(--font-display); font-weight:900; font-size:2.9vh; color:var(--accent); margin-bottom:1.8vh; }
+  .sa-cmp-col.alt h3{ color:var(--accent-2); }
+  .sa-cmp-col li{ font-size:2.3vh; margin:1.2vh 0; list-style:none; padding-left:1.4vw; position:relative; line-height:1.5; }
+  .sa-cmp-col li::before{ content:""; position:absolute; left:0; top:1.2vh; width:.9vh; height:.9vh; border-radius:50%; background:var(--accent); }
+  .sa-cmp-col.alt li::before{ background:var(--accent-2); }
+  .sa-cmp-vs{ align-self:center; font-family:var(--font-display); font-weight:900; font-size:3vh; color:var(--subtext); }
+
+  /* 딜레마 저울 (다크) */
+  .eth-dilemma .ed-q{ font-family:var(--font-display); font-weight:700; font-size:3.4vh; color:#fff; margin-bottom:5vh; text-align:center; }
+  .ed-scale{ position:relative; width:64vw; display:flex; justify-content:space-between; align-items:flex-start; }
+  .ed-scale::before{ content:""; position:absolute; top:-2.4vh; left:8%; right:8%; height:4px; background:var(--accent); border-radius:4px; }
+  .ed-pan{ width:24vw; background:rgba(255,255,255,.06); border:2px solid var(--accent); border-radius:16px; padding:3vh 2vw; text-align:center; }
+  .ed-pan.right{ border-color:var(--accent-3); }
+  .ed-pan b{ display:block; font-family:var(--font-display); font-weight:900; font-size:3vh; color:#c4b5fd; margin-bottom:1.4vh; }
+  .ed-pan.right b{ color:#fcd34d; }
+  .ed-pan p{ font-family:var(--font-body); font-size:2.3vh; color:var(--text-dark); line-height:1.6; }
+  .ed-rope{ position:absolute; top:-2.2vh; width:2px; height:2.4vh; background:var(--accent); }
+
+  /* 매트릭스 */
+  .sa-matrix{ display:grid; grid-template-columns:auto 1fr; grid-template-rows:1fr auto; gap:1.2vh; width:66vw; }
+  .sa-mx-grid{ grid-column:2; grid-row:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:1.4vh; height:54vh; }
+  .sa-mx-cell{ display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:14px; border:2px solid var(--line); background:var(--surface); text-align:center; padding:1vh; }
+  .sa-mx-cell b{ font-family:var(--font-display); font-weight:900; font-size:2.5vh; color:var(--text); }
+  .sa-mx-cell p{ font-family:var(--font-body); font-size:1.9vh; color:var(--subtext); margin-top:.6vh; }
+  .sa-mx-cell.hl{ background:var(--accent-soft); border-color:var(--accent); }
+  .sa-mx-yaxis{ grid-column:1; grid-row:1; writing-mode:vertical-rl; text-align:center; font-family:var(--font-display); font-weight:700; color:var(--subtext); font-size:2vh; }
+  .sa-mx-xaxis{ grid-column:2; grid-row:2; text-align:center; font-family:var(--font-display); font-weight:700; color:var(--subtext); font-size:2vh; }
+
+  .keychips{ display:flex; flex-wrap:wrap; gap:1.4vh 1.4vw; justify-content:center; max-width:78vw; margin-top:3vh; }
+  .keychips span{ font-family:var(--font-display); font-weight:700; font-size:2.4vh; color:var(--accent);
+    background:var(--accent-soft); border:2px solid var(--accent); border-radius:999px; padding:1vh 2vw; }
+  .hud{ position:fixed; right:2vw; bottom:2.4vh; font-family:var(--font-data); font-size:1.8vh; color:var(--subtext); z-index:9; }
+</style>
+</head>
+<body>
+
+<section class="slide dark">
+  <div class="unit-no">윤리 사상 · 도덕 판단</div>
+  <h1>옳고 그름의<br>기준은 무엇인가</h1>
+  <p class="lead">행위의 옳음을 정하는 두 가지 큰 길 — 의무인가, 결과인가</p>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">학습목표</div>
+  <ul class="goals">
+    <li class="fragment">의무론과 결과론의 핵심을 구분한다</li>
+    <li class="fragment">윤리적 딜레마 상황을 분석한다</li>
+    <li class="fragment">자신의 판단 기준을 설명한다</li>
+  </ul>
+</section>
+
+<section class="slide dark"><div class="secnum num">1</div><h1>두 사상가, 두 기준</h1></section>
+
+<!-- 사상가 카드 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.5vh;">행위의 옳음을 어디서 찾는가</h2>
+  <div class="eth-thinkers">
+    <div class="eth-thinker fragment">
+      <div class="et-bust">칸</div>
+      <div class="et-name">칸트</div>
+      <div class="et-dates">1724 ~ 1804</div>
+      <div class="et-core">“네 행위의 준칙이 보편 법칙이 되도록 하라” — 의무 그 자체가 옳음</div>
+    </div>
+    <div class="eth-thinker alt fragment">
+      <div class="et-bust">밀</div>
+      <div class="et-name">밀</div>
+      <div class="et-dates">1806 ~ 1873</div>
+      <div class="et-core">“최대 다수의 최대 행복” — 결과가 가져오는 행복이 옳음</div>
+    </div>
+  </div>
+</section>
+
+<!-- 비교 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.5vh;">의무론 vs 결과론</h2>
+  <div class="sa-compare">
+    <div class="sa-cmp-col">
+      <h3>의무론 (칸트)</h3>
+      <ul><li class="fragment">행위의 동기·의무를 본다</li><li class="fragment">거짓말은 결과와 무관히 그르다</li><li class="fragment">인간을 수단 아닌 목적으로</li></ul>
+    </div>
+    <div class="sa-cmp-vs">VS</div>
+    <div class="sa-cmp-col alt">
+      <h3>결과론 (공리주의)</h3>
+      <ul><li class="fragment">행위가 낳는 결과를 본다</li><li class="fragment">더 큰 행복이면 정당화</li><li class="fragment">소수 희생 논란</li></ul>
+    </div>
+  </div>
+</section>
+
+<section class="slide dark"><div class="secnum num">2</div><h1>딜레마 앞에서</h1></section>
+
+<!-- 딜레마 저울 (다크) -->
+<section class="slide dark eth-dilemma">
+  <div class="ed-q">한 명을 희생해 다섯을 구할 것인가?</div>
+  <div class="ed-scale">
+    <div class="ed-rope" style="left:20%;"></div>
+    <div class="ed-rope" style="right:20%;"></div>
+    <div class="ed-pan left fragment"><b>의무론</b><p>사람을 수단으로 쓸 수 없다 — 안 된다</p></div>
+    <div class="ed-pan right fragment"><b>결과론</b><p>다섯을 살리는 편이 낫다 — 허용</p></div>
+  </div>
+</section>
+
+<!-- 매트릭스: 판단 기준 -->
+<section class="slide">
+  <h2 style="margin-bottom:3vh;">행위를 어떻게 판단할까</h2>
+  <div class="sa-matrix">
+    <div class="sa-mx-yaxis">좋음 ↑ 동기 ↓ 나쁨</div>
+    <div class="sa-mx-grid">
+      <div class="sa-mx-cell hl fragment"><b>온전히 선한 행위</b><p>동기 ○ · 결과 ○</p></div>
+      <div class="sa-mx-cell fragment"><b>안타까운 선의</b><p>동기 ○ · 결과 ✕</p></div>
+      <div class="sa-mx-cell fragment"><b>우연한 좋음</b><p>동기 ✕ · 결과 ○</p></div>
+      <div class="sa-mx-cell fragment"><b>명백한 악</b><p>동기 ✕ · 결과 ✕</p></div>
+    </div>
+    <div class="sa-mx-xaxis">나쁨 ← 결과 → 좋음</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">단원 정리</div><h2>핵심 키워드</h2>
+  <div class="keychips">
+    <span class="fragment">의무론 · 칸트</span>
+    <span class="fragment">결과론 · 공리주의</span>
+    <span class="fragment">보편 법칙</span>
+    <span class="fragment">최대 다수의 최대 행복</span>
+    <span class="fragment">목적으로서의 인간</span>
+  </div>
+</section>
+
+<div class="hud"><span id="cur" class="num">1</span> / <span id="tot" class="num">10</span></div>
+<script>
+  const slides=[...document.querySelectorAll('.slide')]; const elCur=document.getElementById('cur'), elTot=document.getElementById('tot');
+  let cur=0; elTot.textContent=slides.length;
+  function show(){ slides.forEach((s,i)=>s.classList.toggle('active', i===cur)); elCur.textContent=cur+1; }
+  function frags(s){ return [...s.querySelectorAll('.fragment:not(.visible)')]; }
+  function next(){ const s=slides[cur], f=frags(s); if(f.length){ f[0].classList.add('visible'); return; } if(cur<slides.length-1){ cur++; show(); } }
+  function prev(){ const s=slides[cur], v=[...s.querySelectorAll('.fragment.visible')]; if(v.length){ v[v.length-1].classList.remove('visible'); return; } if(cur>0){ cur--; show(); slides[cur].querySelectorAll('.fragment').forEach(f=>f.classList.add('visible')); } }
+  addEventListener('keydown', e=>{ if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); } else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); } else if(e.key==='Home'){ cur=0; show(); } else if(e.key==='End'){ cur=slides.length-1; show(); } });
+  addEventListener('click', e=>{ e.clientX < innerWidth/2 ? prev() : next(); });
+  show();
+</script>
+</body>
+</html>

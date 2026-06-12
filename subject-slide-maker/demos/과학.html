@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>생태계와 에너지 흐름 · 과학 데모</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  /* ===== 과학 테마 (themes.md) ===== */
+  :root {
+    --bg:#f6f9fb; --bg-dark:#0f172a; --surface:#ffffff;
+    --text:#0f172a; --text-dark:#e2e8f0; --subtext:#475569;
+    --accent:#0e7490; --accent-2:#047857; --accent-3:#b91c1c;
+    --line:#cbd5e1; --accent-soft:#ecfeff;
+    --font-display:'Pretendard'; --font-body:'Pretendard'; --font-data:'IBM Plex Mono';
+  }
+
+  * { word-break: keep-all; overflow-wrap: break-word; box-sizing: border-box; margin:0; padding:0; }
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); }
+
+  .slide {
+    position:absolute; inset:0; width:100vw; height:100vh; overflow:hidden;
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    padding:5vh 8vw; background:var(--bg); color:var(--text);
+    font-family:var(--font-body);
+  }
+  .slide.active{ display:flex; }
+  .slide.dark{ background:var(--bg-dark); color:var(--text-dark); }
+
+  h1{ font-family:var(--font-display); font-weight:800; font-size:7vh; line-height:1.12; text-align:center; }
+  h2{ font-family:var(--font-display); font-weight:800; font-size:4.4vh; color:var(--accent); text-align:center; }
+  .eyebrow{ font-family:var(--font-display); font-weight:700; font-size:2.2vh; letter-spacing:.05em; color:var(--accent); margin-bottom:2vh; }
+  .dark .eyebrow{ color:#22d3ee; }
+  .lead{ font-family:var(--font-body); font-size:2.4vh; color:var(--subtext); margin-top:2.4vh; text-align:center; max-width:70vw; }
+  .dark h1{ color:#fff; }
+  .num{ font-family:var(--font-data); }
+
+  /* 단원 표지 */
+  .cover .unit-no{ font-family:var(--font-data); font-size:3vh; color:#22d3ee; letter-spacing:.1em; }
+
+  /* 학습목표 리스트 */
+  .goals{ list-style:none; display:flex; flex-direction:column; gap:2.2vh; margin-top:4vh; }
+  .goals li{ font-family:var(--font-body); font-size:2.8vh; color:var(--text); display:flex; align-items:center; gap:1.4vw; }
+  .goals li::before{ content:""; width:1.6vh; height:1.6vh; border-radius:50%; background:var(--accent); flex:none; }
+
+  /* 프래그먼트 — opacity만 애니메이션(transform으로 배치되는 사이클·허브 노드와 충돌 방지) */
+  .fragment{ opacity:0; transition:opacity .4s ease; }
+  .fragment.visible{ opacity:1; }
+
+  .sa-title{ font-family:var(--font-display); font-weight:800; }
+  .sa-cap{ font-family:var(--font-body); color:var(--subtext); }
+
+  /* ===== 프로세스 (먹이사슬) ===== */
+  .sa-process{ display:flex; width:90vw; }
+  .sa-step{ position:relative; flex:1; padding:3vh 2vw 3vh 3vw; background:var(--accent-soft);
+    clip-path:polygon(0 0, calc(100% - 1.6vw) 0, 100% 50%, calc(100% - 1.6vw) 100%, 0 100%, 1.6vw 50%); margin-right:-1.2vw; }
+  .sa-step:first-child{ clip-path:polygon(0 0, calc(100% - 1.6vw) 0, 100% 50%, calc(100% - 1.6vw) 100%, 0 100%); }
+  .sa-step:nth-child(2n){ background:color-mix(in srgb, var(--accent) 14%, var(--surface)); }
+  .sa-step-no{ display:inline-flex; align-items:center; justify-content:center; width:4.4vh; height:4.4vh; border-radius:50%;
+    background:var(--accent); color:#fff; font-family:var(--font-display); font-weight:800; font-size:2.2vh; }
+  .sa-step-t{ font-family:var(--font-display); font-weight:800; font-size:2.7vh; margin-top:1.2vh; }
+  .sa-step .sa-cap{ font-size:1.8vh; margin-top:.4vh; }
+
+  /* ===== 피라미드 (생태 피라미드) ===== */
+  .sa-pyramid{ display:flex; flex-direction:column; align-items:center; gap:1vh; }
+  .sa-pyr-layer{ width:calc(var(--w) * 1vh); height:9.5vh; display:flex; align-items:center; justify-content:center;
+    clip-path:polygon(8% 0, 92% 0, 100% 100%, 0 100%); color:#fff; }
+  .sa-pyr-layer span{ font-family:var(--font-display); font-weight:800; font-size:2.5vh; }
+  .sa-pyr-layer:nth-child(1){ background:var(--accent); }
+  .sa-pyr-layer:nth-child(2){ background:color-mix(in srgb, var(--accent) 75%, var(--surface)); color:var(--text); }
+  .sa-pyr-layer:nth-child(3){ background:color-mix(in srgb, var(--accent) 50%, var(--surface)); color:var(--text); }
+  .sa-pyr-layer:nth-child(4){ background:color-mix(in srgb, var(--accent-2) 55%, var(--surface)); color:var(--text); }
+
+  /* ===== 막대그래프 (10% 법칙) ===== */
+  .sa-bars{ display:flex; align-items:flex-end; gap:4vw; height:44vh; }
+  .sa-bar-col{ display:flex; flex-direction:column; align-items:center; justify-content:flex-end; }
+  .sa-bar{ width:8vw; background:var(--accent); border-radius:6px 6px 0 0; }
+  .sa-bar.alt{ background:var(--accent-2); }
+  .sa-bar-v{ font-family:var(--font-data); font-weight:600; font-size:2vh; margin-top:.8vh; }
+  .sa-bar-l{ font-family:var(--font-display); font-size:1.9vh; color:var(--subtext); }
+
+  /* ===== 사이클 (탄소 순환) ===== */
+  .sa-cycle{ position:relative; width:54vh; height:54vh; }
+  .sa-cycle-track{ position:absolute; inset:8vh; border-radius:50%; border:3px dashed var(--line); }
+  .sa-cnode{ position:absolute; left:50%; top:50%; width:16vh; height:16vh; margin:-8vh 0 0 -8vh; border-radius:50%;
+    background:var(--accent-soft); border:3px solid var(--accent); display:flex; align-items:center; justify-content:center; text-align:center;
+    transform:rotate(calc(360deg / var(--n) * var(--i))) translateY(-19vh) rotate(calc(-360deg / var(--n) * var(--i))); }
+  .sa-cnode b{ font-family:var(--font-display); font-weight:800; font-size:2.2vh; color:var(--accent); }
+  .sa-cnode:nth-child(2n){ border-color:var(--accent-2); background:color-mix(in srgb, var(--accent-2) 12%, var(--surface)); }
+  .sa-cnode:nth-child(2n) b{ color:var(--accent-2); }
+  .sa-cycle-hub{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:17vh; height:17vh; border-radius:50%;
+    background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--font-display); font-weight:800; font-size:2.4vh; }
+
+  /* ===== 비교 ===== */
+  .sa-compare{ display:flex; align-items:stretch; gap:2vw; width:80vw; }
+  .sa-cmp-col{ flex:1; background:var(--accent-soft); border-radius:16px; padding:3.4vh 2.4vw; }
+  .sa-cmp-col.alt{ background:color-mix(in srgb, var(--accent-2) 12%, var(--surface)); }
+  .sa-cmp-col h3{ font-family:var(--font-display); font-weight:800; font-size:2.9vh; color:var(--accent); margin-bottom:1.8vh; }
+  .sa-cmp-col.alt h3{ color:var(--accent-2); }
+  .sa-cmp-col li{ font-family:var(--font-body); font-size:2.2vh; margin:1vh 0; list-style:none; padding-left:1.4vw; position:relative; }
+  .sa-cmp-col li::before{ content:""; position:absolute; left:0; top:1vh; width:.9vh; height:.9vh; border-radius:50%; background:var(--accent); }
+  .sa-cmp-col.alt li::before{ background:var(--accent-2); }
+  .sa-cmp-vs{ align-self:center; font-family:var(--font-display); font-weight:800; font-size:3vh; color:var(--subtext); }
+
+  /* ===== 과학 전용: 실험 과정도 ===== */
+  .sci-exp{ display:flex; gap:1.2vw; width:90vw; }
+  .sci-exp-step{ flex:1; background:var(--surface); border:2px solid var(--line); border-left:6px solid var(--accent);
+    border-radius:12px; padding:2.6vh 1.4vw; }
+  .sci-exp-step .tag{ font-family:var(--font-display); font-weight:800; font-size:1.8vh; color:#fff; background:var(--accent); padding:.5vh 1vw; border-radius:6px; }
+  .sci-exp-step:nth-child(3){ border-left-color:var(--accent-2); }
+  .sci-exp-step:nth-child(3) .tag{ background:var(--accent-2); }
+  .sci-exp-step:nth-child(4){ border-left-color:var(--accent-2); }
+  .sci-exp-step:nth-child(4) .tag{ background:var(--accent-2); }
+  .sci-exp-step p{ font-family:var(--font-body); font-size:2.1vh; margin-top:1.4vh; }
+
+  /* ===== 과학 전용: 변인 통제 표 ===== */
+  .sci-vars{ display:flex; gap:1.6vw; width:82vw; }
+  .vcell{ flex:1; background:var(--surface); border:2px solid var(--line); border-radius:14px; padding:3vh 1.6vw; text-align:center; }
+  .vcell h4{ font-family:var(--font-display); font-weight:800; font-size:2.2vh; color:var(--subtext); margin-bottom:1.4vh; }
+  .vcell p{ font-family:var(--font-body); font-size:2.4vh; }
+  .vcell.hl{ background:var(--accent-soft); border-color:var(--accent); }
+  .vcell.hl h4{ color:var(--accent); }
+
+  /* ===== 과학 전용: 구조 도식 (콜아웃) ===== */
+  .sci-diagram{ position:relative; width:60vh; height:46vh; }
+  .leaf{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:30vh; height:22vh;
+    background:color-mix(in srgb, var(--accent-2) 30%, var(--surface)); border:3px solid var(--accent-2);
+    border-radius:50% 50% 50% 50% / 60% 60% 40% 40%; }
+  .chloro{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:9vh; height:5vh; border-radius:50%;
+    background:var(--accent-2); }
+  .callout{ position:absolute; background:var(--surface); border:2px solid var(--accent); border-radius:10px;
+    padding:.9vh 1.2vw; font-family:var(--font-body); font-size:1.9vh; }
+  .callout b{ color:var(--accent); font-family:var(--font-display); }
+
+  .keychips{ display:flex; flex-wrap:wrap; gap:1.4vh 1.4vw; justify-content:center; max-width:78vw; margin-top:3vh; }
+  .keychips span{ font-family:var(--font-display); font-weight:700; font-size:2.4vh; color:var(--accent);
+    background:var(--accent-soft); border:2px solid var(--accent); border-radius:999px; padding:1vh 2vw; }
+
+  /* 진행 표시 */
+  .hud{ position:fixed; right:2vw; bottom:2.4vh; font-family:var(--font-data); font-size:1.8vh; color:var(--subtext); z-index:9; }
+  .dark ~ .hud{ color:#94a3b8; }
+  .secnum{ font-family:var(--font-data); font-size:2.4vh; color:var(--accent); margin-bottom:1.5vh; }
+</style>
+</head>
+<body>
+
+<!-- 1. 표지 -->
+<section class="slide dark cover">
+  <div class="unit-no">단원 Ⅴ · 생태계와 상호작용</div>
+  <h1>생태계와<br>에너지 흐름</h1>
+  <p class="lead">생물은 어떻게 에너지를 얻고, 물질은 어떻게 돌고 도는가</p>
+</section>
+
+<!-- 2. 학습목표 -->
+<section class="slide">
+  <div class="eyebrow">학습목표</div>
+  <ul class="goals">
+    <li class="fragment">생태계 구성 요소와 관계를 설명한다</li>
+    <li class="fragment">먹이 사슬에서 에너지가 흐르는 방향을 안다</li>
+    <li class="fragment">에너지 흐름과 물질 순환의 차이를 구분한다</li>
+  </ul>
+</section>
+
+<!-- 3. 소단원 구분 -->
+<section class="slide dark">
+  <div class="secnum num" style="color:#22d3ee;">1</div>
+  <h1>생태계의 구성</h1>
+</section>
+
+<!-- 4. 허브-스포크: 구성요소 -->
+<section class="slide">
+  <h2 style="margin-bottom:3vh;">생태계를 이루는 것</h2>
+  <div class="sa-cycle" style="--n:4; width:52vh; height:52vh;">
+    <div class="sa-cycle-track" style="border-style:solid;"></div>
+    <div class="sa-cnode fragment" style="--i:0;"><b>생산자</b></div>
+    <div class="sa-cnode fragment" style="--i:1;"><b>소비자</b></div>
+    <div class="sa-cnode fragment" style="--i:2;"><b>분해자</b></div>
+    <div class="sa-cnode fragment" style="--i:3;"><b>비생물 환경</b></div>
+    <div class="sa-cycle-hub">생태계</div>
+  </div>
+</section>
+
+<!-- 5. 프로세스: 먹이 사슬 -->
+<section class="slide">
+  <h2 style="margin-bottom:4vh;">먹이 사슬 — 에너지가 흐르는 길</h2>
+  <div class="sa-process">
+    <div class="sa-step fragment"><span class="sa-step-no">1</span><div class="sa-step-t">생산자</div><p class="sa-cap">벼 · 식물</p></div>
+    <div class="sa-step fragment"><span class="sa-step-no">2</span><div class="sa-step-t">1차 소비자</div><p class="sa-cap">메뚜기</p></div>
+    <div class="sa-step fragment"><span class="sa-step-no">3</span><div class="sa-step-t">2차 소비자</div><p class="sa-cap">개구리</p></div>
+    <div class="sa-step fragment"><span class="sa-step-no">4</span><div class="sa-step-t">3차 소비자</div><p class="sa-cap">뱀 · 매</p></div>
+  </div>
+</section>
+
+<!-- 6. 피라미드: 생태 피라미드 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.5vh;">생태 피라미드 — 위로 갈수록 줄어든다</h2>
+  <div class="sa-pyramid">
+    <div class="sa-pyr-layer fragment" style="--w:36;"><span>3차 소비자</span></div>
+    <div class="sa-pyr-layer fragment" style="--w:56;"><span>2차 소비자</span></div>
+    <div class="sa-pyr-layer fragment" style="--w:76;"><span>1차 소비자</span></div>
+    <div class="sa-pyr-layer fragment" style="--w:96;"><span>생산자</span></div>
+  </div>
+</section>
+
+<!-- 7. 막대그래프: 10% 법칙 -->
+<section class="slide">
+  <h2 style="margin-bottom:2vh;">영양 단계별 에너지량 <span class="num" style="color:var(--accent-3);">(10% 법칙)</span></h2>
+  <div class="sa-bars">
+    <div class="sa-bar-col"><div class="sa-bar" style="height:40vh;"></div><span class="sa-bar-v">1000</span><span class="sa-bar-l">생산자</span></div>
+    <div class="sa-bar-col"><div class="sa-bar" style="height:4vh;"></div><span class="sa-bar-v">100</span><span class="sa-bar-l">1차</span></div>
+    <div class="sa-bar-col"><div class="sa-bar alt" style="height:1.2vh;"></div><span class="sa-bar-v">10</span><span class="sa-bar-l">2차</span></div>
+  </div>
+  <p class="lead">단계가 올라갈 때마다 에너지의 <b class="num" style="color:var(--accent-3);">약 90%</b>가 열로 사라진다</p>
+</section>
+
+<!-- 8. 소단원 구분 -->
+<section class="slide dark">
+  <div class="secnum num" style="color:#22d3ee;">2</div>
+  <h1>물질 순환 vs 에너지 흐름</h1>
+</section>
+
+<!-- 9. 사이클: 탄소 순환 -->
+<section class="slide">
+  <h2 style="margin-bottom:2.5vh;">탄소는 돌고 돈다 — 탄소 순환</h2>
+  <div class="sa-cycle" style="--n:4;">
+    <div class="sa-cycle-track"></div>
+    <div class="sa-cnode fragment" style="--i:0;"><b>광합성<br>CO₂ 흡수</b></div>
+    <div class="sa-cnode fragment" style="--i:1;"><b>유기물<br>(먹이)</b></div>
+    <div class="sa-cnode fragment" style="--i:2;"><b>호흡<br>CO₂ 방출</b></div>
+    <div class="sa-cnode fragment" style="--i:3;"><b>분해<br>(사체·배설)</b></div>
+    <div class="sa-cycle-hub">탄소(C)</div>
+  </div>
+</section>
+
+<!-- 10. 비교: 순환 vs 흐름 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.5vh;">무엇이 다른가</h2>
+  <div class="sa-compare">
+    <div class="sa-cmp-col">
+      <h3>물질 순환</h3>
+      <ul>
+        <li class="fragment">생태계 안을 <b>돌고 돈다</b></li>
+        <li class="fragment">탄소 · 질소 · 물</li>
+        <li class="fragment">재사용됨</li>
+      </ul>
+    </div>
+    <div class="sa-cmp-vs">VS</div>
+    <div class="sa-cmp-col alt">
+      <h3>에너지 흐름</h3>
+      <ul>
+        <li class="fragment"><b>한 방향</b>으로 흐른다</li>
+        <li class="fragment">태양 → 생물 → 열</li>
+        <li class="fragment">다시 못 씀</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 11. 소단원 구분 -->
+<section class="slide dark">
+  <div class="secnum num" style="color:#22d3ee;">3</div>
+  <h1>탐구 — 광합성과 빛</h1>
+</section>
+
+<!-- 12. 실험 과정도 -->
+<section class="slide">
+  <h2 style="margin-bottom:4vh;">실험 — 빛의 세기와 광합성량</h2>
+  <div class="sci-exp">
+    <div class="sci-exp-step fragment"><span class="tag">가설</span><p>빛이 강할수록 광합성량이 늘 것이다</p></div>
+    <div class="sci-exp-step fragment"><span class="tag">방법</span><p>광도를 바꾸며 검정말 기포 수 측정</p></div>
+    <div class="sci-exp-step fragment"><span class="tag">결과</span><p>광도 ↑ → 기포 수 ↑</p></div>
+    <div class="sci-exp-step fragment"><span class="tag">결론</span><p>일정 범위까지 광도와 광합성량은 비례</p></div>
+  </div>
+</section>
+
+<!-- 13. 변인 통제 표 -->
+<section class="slide">
+  <h2 style="margin-bottom:4vh;">무엇을 바꾸고, 무엇을 고정했나</h2>
+  <div class="sci-vars">
+    <div class="vcell fragment"><h4>조작 변인</h4><p>빛의 세기</p></div>
+    <div class="vcell fragment"><h4>통제 변인</h4><p>온도 · CO₂ 농도<br>검정말 종류</p></div>
+    <div class="vcell hl fragment"><h4>종속 변인</h4><p>기포 발생 수</p></div>
+  </div>
+</section>
+
+<!-- 14. 구조 도식 (콜아웃) -->
+<section class="slide">
+  <h2 style="margin-bottom:2vh;">광합성은 어디서 — 잎의 구조</h2>
+  <div class="sci-diagram">
+    <div class="leaf"></div>
+    <div class="chloro"></div>
+    <div class="callout fragment" style="top:2%; left:0;"><b>①</b> 잎 — 광합성 기관</div>
+    <div class="callout fragment" style="bottom:4%; right:0;"><b>②</b> 엽록체 — 실제 장소</div>
+    <div class="callout fragment" style="top:42%; right:-4%;"><b>③</b> 기공 — CO₂ 출입</div>
+  </div>
+</section>
+
+<!-- 15. 단원 정리 -->
+<section class="slide">
+  <div class="eyebrow">단원 정리</div>
+  <h2>핵심 키워드</h2>
+  <div class="keychips">
+    <span class="fragment">생산자·소비자·분해자</span>
+    <span class="fragment">먹이 사슬</span>
+    <span class="fragment">생태 피라미드</span>
+    <span class="fragment">10% 법칙</span>
+    <span class="fragment">탄소 순환</span>
+    <span class="fragment">에너지는 한 방향</span>
+  </div>
+</section>
+
+<div class="hud"><span id="cur" class="num">1</span> / <span id="tot" class="num">15</span></div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const elCur=document.getElementById('cur'); const elTot=document.getElementById('tot');
+  let cur=0; elTot.textContent=slides.length;
+  function show(){ slides.forEach((s,i)=>s.classList.toggle('active', i===cur)); elCur.textContent=cur+1; }
+  function frags(s){ return [...s.querySelectorAll('.fragment:not(.visible)')]; }
+  function next(){
+    const s=slides[cur], f=frags(s);
+    if(f.length){ f[0].classList.add('visible'); return; }
+    if(cur<slides.length-1){ cur++; show(); }
+  }
+  function prev(){
+    const s=slides[cur], v=[...s.querySelectorAll('.fragment.visible')];
+    if(v.length){ v[v.length-1].classList.remove('visible'); return; }
+    if(cur>0){ cur--; show();
+      slides[cur].querySelectorAll('.fragment').forEach(f=>f.classList.add('visible')); }
+  }
+  addEventListener('keydown', e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); }
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); }
+    else if(e.key==='Home'){ cur=0; show(); }
+    else if(e.key==='End'){ cur=slides.length-1; show(); }
+  });
+  addEventListener('click', e=>{ e.clientX < innerWidth/2 ? prev() : next(); });
+  show();
+</script>
+</body>
+</html>

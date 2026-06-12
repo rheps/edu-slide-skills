@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>나의 진로 설계 · 진로 데모</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap');
+
+  /* ===== 진로 테마 ===== */
+  :root {
+    --bg:#f5fbf7; --bg-dark:#0f3a2e; --surface:#ffffff;
+    --text:#13261d; --text-dark:#e3f4ea; --subtext:#4a6157;
+    --accent:#16a34a; --accent-2:#f59e0b; --accent-3:#2563eb;
+    --line:#cfe7d8; --accent-soft:#e8f7ee;
+    --font-display:'Pretendard'; --font-body:'Gowun Dodum'; --font-data:'Pretendard';
+  }
+  * { word-break:keep-all; overflow-wrap:break-word; box-sizing:border-box; margin:0; padding:0; }
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); }
+  .slide{ position:absolute; inset:0; width:100vw; height:100vh; overflow:hidden; display:none;
+    flex-direction:column; align-items:center; justify-content:center; padding:5vh 8vw;
+    background:var(--bg); color:var(--text); font-family:var(--font-body); }
+  .slide.active{ display:flex; } .slide.dark{ background:var(--bg-dark); color:var(--text-dark); }
+  h1{ font-family:var(--font-display); font-weight:800; font-size:7vh; line-height:1.12; text-align:center; }
+  .dark h1{ color:#fff; }
+  h2{ font-family:var(--font-display); font-weight:800; font-size:4.4vh; color:var(--accent); text-align:center; }
+  .eyebrow{ font-family:var(--font-display); font-weight:700; font-size:2.2vh; letter-spacing:.04em; color:var(--accent); margin-bottom:2vh; }
+  .lead{ font-family:var(--font-body); font-size:2.5vh; color:var(--subtext); margin-top:2.4vh; text-align:center; max-width:66vw; line-height:1.6; }
+  .dark .lead{ color:#9fc9b4; }
+  .num{ font-family:var(--font-data); }
+  .unit-no{ font-family:var(--font-data); font-weight:700; font-size:2.5vh; color:#6ee7a8; letter-spacing:.08em; }
+  .secnum{ font-family:var(--font-data); font-weight:700; font-size:2.4vh; color:#6ee7a8; margin-bottom:1.5vh; }
+  .goals{ list-style:none; display:flex; flex-direction:column; gap:2.4vh; margin-top:4vh; }
+  .goals li{ font-size:2.8vh; display:flex; align-items:center; gap:1.4vw; }
+  .goals li::before{ content:""; width:1.8vh; height:1.8vh; background:var(--accent); flex:none; clip-path:polygon(0 0,100% 50%,0 100%); }
+  .fragment{ opacity:0; transition:opacity .4s ease; } .fragment.visible{ opacity:1; }
+
+  /* 직업 카드 */
+  .car-job{ width:62vw; background:var(--surface); border:2px solid var(--line); border-top:8px solid var(--accent); border-radius:18px; padding:4vh 3vw; }
+  .cj-title{ font-family:var(--font-display); font-weight:800; font-size:4.2vh; color:var(--accent); margin-bottom:2.6vh; text-align:center; }
+  .cj-row{ display:flex; align-items:flex-start; gap:2vw; padding:1.6vh 0; border-top:1px solid var(--line); }
+  .cj-row b{ font-family:var(--font-display); font-weight:800; font-size:2.4vh; color:var(--subtext); width:14vw; flex:none; }
+  .cj-row p{ font-family:var(--font-body); font-size:2.4vh; }
+  .cj-row .up{ color:var(--accent-2); font-family:var(--font-display); font-weight:800; }
+
+  /* 역량 허브 */
+  .sa-hub{ position:relative; width:54vh; height:54vh; }
+  .sa-hub-center{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:2; width:18vh; height:18vh; border-radius:50%;
+    background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--font-display); font-weight:800; font-size:2.4vh; }
+  .sa-spoke{ position:absolute; left:50%; top:50%; width:15vh; height:15vh; margin:-7.5vh 0 0 -7.5vh; border-radius:50%;
+    background:var(--accent-soft); border:2px solid var(--accent-2); display:flex; align-items:center; justify-content:center; text-align:center;
+    transform:rotate(calc(360deg / var(--n) * var(--i))) translateY(-20vh) rotate(calc(-360deg / var(--n) * var(--i))); }
+  .sa-spoke span{ font-family:var(--font-display); font-weight:700; font-size:2vh; color:var(--text); }
+
+  /* 로드맵 (타임라인) */
+  .sa-tl{ display:grid; width:88vw; row-gap:1.6vh; }
+  .sa-tl-label{ text-align:center; font-family:var(--font-display); font-weight:800; font-size:2.2vh; color:var(--accent); }
+  .sa-tl-label.cur{ color:var(--accent-2); }
+  .sa-tl-track{ grid-column:1 / -1; display:flex; justify-content:space-around; position:relative; height:4vh; align-items:center; }
+  .sa-tl-line{ position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); height:3px; background:var(--line); }
+  .sa-tl-dot{ width:1.9vh; height:1.9vh; border-radius:50%; background:var(--accent); border:3px solid var(--bg); z-index:1; }
+  .sa-tl-dot.cur{ width:2.6vh; height:2.6vh; background:var(--accent-2); box-shadow:0 0 0 4px color-mix(in srgb, var(--accent-2) 30%, transparent); }
+  .sa-tl-desc{ text-align:center; font-family:var(--font-body); font-size:1.9vh; color:var(--subtext); }
+
+  /* 매트릭스 */
+  .sa-matrix{ display:grid; grid-template-columns:auto 1fr; grid-template-rows:1fr auto; gap:1.2vh; width:66vw; }
+  .sa-mx-grid{ grid-column:2; grid-row:1; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:1.4vh; height:52vh; }
+  .sa-mx-cell{ display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:14px; border:2px solid var(--line); background:var(--surface); text-align:center; padding:1vh; }
+  .sa-mx-cell b{ font-family:var(--font-display); font-weight:800; font-size:2.4vh; color:var(--text); }
+  .sa-mx-cell p{ font-family:var(--font-body); font-size:1.9vh; color:var(--subtext); margin-top:.5vh; }
+  .sa-mx-cell.hl{ background:var(--accent-soft); border-color:var(--accent); }
+  .sa-mx-yaxis{ grid-column:1; grid-row:1; writing-mode:vertical-rl; text-align:center; font-family:var(--font-display); font-weight:700; color:var(--subtext); font-size:2vh; }
+  .sa-mx-xaxis{ grid-column:2; grid-row:2; text-align:center; font-family:var(--font-display); font-weight:700; color:var(--subtext); font-size:2vh; }
+
+  .keychips{ display:flex; flex-wrap:wrap; gap:1.4vh 1.4vw; justify-content:center; max-width:80vw; margin-top:3vh; }
+  .keychips span{ font-family:var(--font-display); font-weight:700; font-size:2.4vh; color:var(--accent);
+    background:var(--accent-soft); border:2px solid var(--accent); border-radius:999px; padding:1vh 2vw; }
+  .hud{ position:fixed; right:2vw; bottom:2.4vh; font-family:var(--font-data); font-size:1.8vh; color:var(--subtext); z-index:9; }
+</style>
+</head>
+<body>
+
+<section class="slide dark">
+  <div class="unit-no">진로와 직업 · 진로 설계</div>
+  <h1>나의 진로 설계</h1>
+  <p class="lead">나를 알고, 길을 찾고, 한 걸음씩 나아가기</p>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">학습목표</div>
+  <ul class="goals">
+    <li class="fragment">자기이해의 네 요소를 안다</li>
+    <li class="fragment">관심 직업의 정보를 탐색한다</li>
+    <li class="fragment">진로 의사결정 기준을 세운다</li>
+  </ul>
+</section>
+
+<section class="slide dark"><div class="secnum num">1</div><h1>나를 알기 · 직업 탐색</h1></section>
+
+<!-- 역량 허브 -->
+<section class="slide">
+  <h2 style="margin-bottom:2.5vh;">자기이해 — 나는 누구인가</h2>
+  <div class="sa-hub" style="--n:4;">
+    <div class="sa-hub-center">나</div>
+    <div class="sa-spoke fragment" style="--i:0;"><span>흥미<br>좋아하는 것</span></div>
+    <div class="sa-spoke fragment" style="--i:1;"><span>적성<br>잘하는 것</span></div>
+    <div class="sa-spoke fragment" style="--i:2;"><span>가치관<br>중요한 것</span></div>
+    <div class="sa-spoke fragment" style="--i:3;"><span>성격<br>나의 성향</span></div>
+  </div>
+</section>
+
+<!-- 직업 카드 -->
+<section class="slide">
+  <h2 style="margin-bottom:3vh;">직업 들여다보기</h2>
+  <div class="car-job fragment">
+    <div class="cj-title">데이터 분석가</div>
+    <div class="cj-row"><b>하는 일</b><p>데이터를 분석해 의사결정을 돕는다</p></div>
+    <div class="cj-row"><b>필요 역량</b><p>통계 · 프로그래밍 · 소통 능력</p></div>
+    <div class="cj-row"><b>준비 방법</b><p>수학·정보 교과, 데이터 동아리 활동</p></div>
+    <div class="cj-row"><b>전망</b><p class="up">▲ 성장 — 모든 산업에서 수요 증가</p></div>
+  </div>
+</section>
+
+<section class="slide dark"><div class="secnum num">2</div><h1>길을 그리기 · 결정하기</h1></section>
+
+<!-- 로드맵 -->
+<section class="slide">
+  <h2 style="margin-bottom:5vh;">진로 로드맵</h2>
+  <div class="sa-tl" style="grid-template-columns:repeat(4,1fr);">
+    <div class="sa-tl-label">1학년</div><div class="sa-tl-label">2학년</div><div class="sa-tl-label cur">3학년</div><div class="sa-tl-label">졸업 후</div>
+    <div class="sa-tl-track"><div class="sa-tl-line"></div><div class="sa-tl-dot"></div><div class="sa-tl-dot"></div><div class="sa-tl-dot cur"></div><div class="sa-tl-dot"></div></div>
+    <div class="sa-tl-desc">자기이해</div><div class="sa-tl-desc">직업 탐색</div><div class="sa-tl-desc">진로 설계</div><div class="sa-tl-desc">실행 · 점검</div>
+  </div>
+</section>
+
+<!-- 의사결정 매트릭스 -->
+<section class="slide">
+  <h2 style="margin-bottom:3vh;">어떤 진로를 고를까</h2>
+  <div class="sa-matrix">
+    <div class="sa-mx-yaxis">높음 ↑ 흥미 ↓ 낮음</div>
+    <div class="sa-mx-grid">
+      <div class="sa-mx-cell hl fragment"><b>최우선 도전</b><p>흥미 ○ · 전망 ○</p></div>
+      <div class="sa-mx-cell fragment"><b>좋아하지만 신중히</b><p>흥미 ○ · 전망 △</p></div>
+      <div class="sa-mx-cell fragment"><b>현실적 선택</b><p>흥미 △ · 전망 ○</p></div>
+      <div class="sa-mx-cell fragment"><b>재검토 필요</b><p>흥미 △ · 전망 △</p></div>
+    </div>
+    <div class="sa-mx-xaxis">낮음 ← 전망 → 높음</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">단원 정리</div><h2>핵심 키워드</h2>
+  <div class="keychips">
+    <span class="fragment">흥미·적성·가치관·성격</span>
+    <span class="fragment">직업 정보 탐색</span>
+    <span class="fragment">진로 로드맵</span>
+    <span class="fragment">의사결정 기준</span>
+    <span class="fragment">실행과 점검</span>
+  </div>
+</section>
+
+<div class="hud"><span id="cur" class="num">1</span> / <span id="tot" class="num">10</span></div>
+<script>
+  const slides=[...document.querySelectorAll('.slide')]; const elCur=document.getElementById('cur'), elTot=document.getElementById('tot');
+  let cur=0; elTot.textContent=slides.length;
+  function show(){ slides.forEach((s,i)=>s.classList.toggle('active', i===cur)); elCur.textContent=cur+1; }
+  function frags(s){ return [...s.querySelectorAll('.fragment:not(.visible)')]; }
+  function next(){ const s=slides[cur], f=frags(s); if(f.length){ f[0].classList.add('visible'); return; } if(cur<slides.length-1){ cur++; show(); } }
+  function prev(){ const s=slides[cur], v=[...s.querySelectorAll('.fragment.visible')]; if(v.length){ v[v.length-1].classList.remove('visible'); return; } if(cur>0){ cur--; show(); slides[cur].querySelectorAll('.fragment').forEach(f=>f.classList.add('visible')); } }
+  addEventListener('keydown', e=>{ if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); } else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); } else if(e.key==='Home'){ cur=0; show(); } else if(e.key==='End'){ cur=slides.length-1; show(); } });
+  addEventListener('click', e=>{ e.clientX < innerWidth/2 ? prev() : next(); });
+  show();
+</script>
+</body>
+</html>

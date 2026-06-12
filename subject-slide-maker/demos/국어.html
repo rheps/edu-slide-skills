@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>김소월 「진달래꽃」 · 국어 데모</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Gowun+Batang:wght@400;700&display=swap');
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+  /* ===== 국어 테마 ===== */
+  :root {
+    --bg:#f7f3ea; --bg-dark:#1a1a17; --surface:#fffdf8;
+    --text:#23211c; --text-dark:#f0ebe0; --subtext:#6b6356;
+    --accent:#9f1239; --accent-2:#1f4e5f; --accent-3:#92400e;
+    --line:#ddd4c2; --accent-soft:#f3e9e6;
+    --font-display:'Nanum Myeongjo'; --font-body:'Gowun Batang'; --font-data:'Pretendard';
+  }
+  * { word-break:keep-all; overflow-wrap:break-word; box-sizing:border-box; margin:0; padding:0; }
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); }
+  .slide{ position:absolute; inset:0; width:100vw; height:100vh; overflow:hidden; display:none;
+    flex-direction:column; align-items:center; justify-content:center; padding:5vh 8vw;
+    background:var(--bg); color:var(--text); font-family:var(--font-body); }
+  .slide.active{ display:flex; } .slide.dark{ background:var(--bg-dark); color:var(--text-dark); }
+  h1{ font-family:var(--font-display); font-weight:800; font-size:7vh; line-height:1.16; text-align:center; }
+  .dark h1{ color:#fff; }
+  h2{ font-family:var(--font-display); font-weight:800; font-size:4.4vh; color:var(--accent); text-align:center; }
+  .eyebrow{ font-family:var(--font-display); font-weight:700; font-size:2.2vh; letter-spacing:.1em; color:var(--accent); margin-bottom:2vh; }
+  .lead{ font-family:var(--font-body); font-size:2.6vh; color:var(--subtext); margin-top:2.4vh; text-align:center; max-width:64vw; line-height:1.7; }
+  .dark .lead{ color:#c4bba8; }
+  .num{ font-family:var(--font-data); }
+  .unit-no{ font-family:var(--font-data); font-size:2.4vh; color:#e8b4c0; letter-spacing:.1em; }
+  .secnum{ font-family:var(--font-data); font-size:2.4vh; color:#e8b4c0; margin-bottom:1.5vh; }
+  .goals{ list-style:none; display:flex; flex-direction:column; gap:2.4vh; margin-top:4vh; }
+  .goals li{ font-size:2.9vh; display:flex; align-items:center; gap:1.4vw; }
+  .goals li::before{ content:""; width:1.4vh; height:1.4vh; background:var(--accent); flex:none; border-radius:2px; transform:rotate(45deg); }
+  .fragment{ opacity:0; transition:opacity .4s ease; } .fragment.visible{ opacity:1; }
+
+  /* 작품 원문 인용 (다크) */
+  .lit-quote{ }
+  .lit-orig{ font-family:var(--font-body); font-weight:700; font-size:3.6vh; line-height:2.1; color:var(--text-dark); text-align:center; }
+  .lit-orig b{ color:#f2849e; }
+  .lit-meta{ font-family:var(--font-display); font-weight:700; font-size:2.4vh; color:#e8b4c0; margin-top:4vh; }
+
+  /* 문학 분석 카드 2x2 */
+  .lit-analysis{ display:grid; grid-template-columns:1fr 1fr; gap:2vh 2vw; width:66vw; }
+  .la-card{ background:var(--surface); border:2px solid var(--line); border-left:6px solid var(--accent); border-radius:14px; padding:3vh 2.2vw; }
+  .la-card h4{ font-family:var(--font-display); font-weight:800; font-size:2.6vh; color:var(--accent); margin-bottom:1vh; }
+  .la-card p{ font-family:var(--font-body); font-size:2.4vh; line-height:1.5; }
+  .la-card:nth-child(2n){ border-left-color:var(--accent-2); }
+  .la-card:nth-child(2n) h4{ color:var(--accent-2); }
+
+  /* 시어 풀이 */
+  .lit-word{ width:64vw; background:var(--surface); border:2px solid var(--line); border-radius:18px; padding:4vh 3vw; text-align:center; }
+  .lw-head{ font-family:var(--font-display); font-weight:800; font-size:4.4vh; color:var(--accent); }
+  .lw-mean{ font-family:var(--font-body); font-size:2.8vh; margin-top:2vh; }
+  .lw-ex{ font-family:var(--font-body); font-size:2.2vh; color:var(--subtext); margin-top:2vh; font-style:italic; }
+
+  /* 표현법 허브 */
+  .sa-hub{ position:relative; width:56vh; height:56vh; }
+  .sa-hub-center{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:2; width:18vh; height:18vh; border-radius:50%;
+    background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--font-display); font-weight:800; font-size:2.6vh; }
+  .sa-spoke{ position:absolute; left:50%; top:50%; width:15vh; height:15vh; margin:-7.5vh 0 0 -7.5vh; border-radius:50%;
+    background:var(--accent-soft); border:2px solid var(--accent-2); display:flex; align-items:center; justify-content:center; text-align:center;
+    transform:rotate(calc(360deg / var(--n) * var(--i))) translateY(-21vh) rotate(calc(-360deg / var(--n) * var(--i))); }
+  .sa-spoke span{ font-family:var(--font-display); font-weight:700; font-size:2vh; color:var(--text); }
+
+  .keychips{ display:flex; flex-wrap:wrap; gap:1.4vh 1.4vw; justify-content:center; max-width:78vw; margin-top:3vh; }
+  .keychips span{ font-family:var(--font-display); font-weight:700; font-size:2.4vh; color:var(--accent);
+    background:var(--accent-soft); border:2px solid var(--accent); border-radius:999px; padding:1vh 2vw; }
+  .hud{ position:fixed; right:2vw; bottom:2.4vh; font-family:var(--font-data); font-size:1.8vh; color:var(--subtext); z-index:9; }
+</style>
+</head>
+<body>
+
+<section class="slide dark">
+  <div class="unit-no">현대시 · 이별의 정한</div>
+  <h1>진달래꽃</h1>
+  <p class="lead">김소월 (1925) — 떠나는 임 앞에서, 슬픔을 꽃으로 바꾸다</p>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">학습목표</div>
+  <ul class="goals">
+    <li class="fragment">화자의 정서와 태도를 파악한다</li>
+    <li class="fragment">반어와 운율의 효과를 안다</li>
+    <li class="fragment">'이별의 정한'이라는 주제를 이해한다</li>
+  </ul>
+</section>
+
+<section class="slide dark"><div class="secnum num">1</div><h1>작품 읽기</h1></section>
+
+<!-- 작품 원문 인용 (다크) -->
+<section class="slide dark lit-quote">
+  <div class="lit-orig fragment">
+    나 보기가 역겨워<br>가실 때에는<br><b>말없이 고이 보내</b> 드리오리다
+  </div>
+  <div class="lit-orig fragment" style="margin-top:4vh;">
+    가시는 걸음걸음<br>놓인 그 꽃을<br><b>사뿐히 즈려밟고</b> 가시옵소서
+  </div>
+  <div class="lit-meta">김소월 「진달래꽃」 중에서</div>
+</section>
+
+<!-- 문학 분석 카드 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.4vh;">작품을 네 갈래로 읽기</h2>
+  <div class="lit-analysis">
+    <div class="la-card fragment"><h4>화자</h4><p>떠나는 임을 보내는 '나'</p></div>
+    <div class="la-card fragment"><h4>주제</h4><p>이별의 슬픔과 그 승화</p></div>
+    <div class="la-card fragment"><h4>표현</h4><p>반어법 · 3음보 운율 · 수미상관</p></div>
+    <div class="la-card fragment"><h4>정서</h4><p>슬픔을 누른 체념과 사랑</p></div>
+  </div>
+</section>
+
+<!-- 시어 풀이 -->
+<section class="slide">
+  <h2 style="margin-bottom:3vh;">시어 풀이</h2>
+  <div class="lit-word fragment">
+    <div class="lw-head">즈려밟다</div>
+    <div class="lw-mean">위에서 힘주어 지그시 밟다</div>
+    <div class="lw-ex">사뿐히 즈려밟고 — 모순된 두 말로 애틋함을 더한다</div>
+  </div>
+</section>
+
+<section class="slide dark"><div class="secnum num">2</div><h1>표현의 비밀</h1></section>
+
+<!-- 표현법 허브 -->
+<section class="slide">
+  <h2 style="margin-bottom:2.5vh;">시를 살아 있게 하는 장치</h2>
+  <div class="sa-hub" style="--n:4;">
+    <div class="sa-hub-center">진달래꽃</div>
+    <div class="sa-spoke fragment" style="--i:0;"><span>반어법<br>(속마음 반대)</span></div>
+    <div class="sa-spoke fragment" style="--i:1;"><span>3음보<br>운율</span></div>
+    <div class="sa-spoke fragment" style="--i:2;"><span>수미상관<br>(처음=끝)</span></div>
+    <div class="sa-spoke fragment" style="--i:3;"><span>꽃 = 사랑<br>(상징)</span></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">단원 정리</div><h2>핵심 키워드</h2>
+  <div class="keychips">
+    <span class="fragment">이별의 정한</span>
+    <span class="fragment">반어법</span>
+    <span class="fragment">3음보 운율</span>
+    <span class="fragment">수미상관</span>
+    <span class="fragment">진달래꽃 = 사랑</span>
+  </div>
+</section>
+
+<div class="hud"><span id="cur" class="num">1</span> / <span id="tot" class="num">10</span></div>
+<script>
+  const slides=[...document.querySelectorAll('.slide')]; const elCur=document.getElementById('cur'), elTot=document.getElementById('tot');
+  let cur=0; elTot.textContent=slides.length;
+  function show(){ slides.forEach((s,i)=>s.classList.toggle('active', i===cur)); elCur.textContent=cur+1; }
+  function frags(s){ return [...s.querySelectorAll('.fragment:not(.visible)')]; }
+  function next(){ const s=slides[cur], f=frags(s); if(f.length){ f[0].classList.add('visible'); return; } if(cur<slides.length-1){ cur++; show(); } }
+  function prev(){ const s=slides[cur], v=[...s.querySelectorAll('.fragment.visible')]; if(v.length){ v[v.length-1].classList.remove('visible'); return; } if(cur>0){ cur--; show(); slides[cur].querySelectorAll('.fragment').forEach(f=>f.classList.add('visible')); } }
+  addEventListener('keydown', e=>{ if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); } else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); } else if(e.key==='Home'){ cur=0; show(); } else if(e.key==='End'){ cur=slides.length-1; show(); } });
+  addEventListener('click', e=>{ e.clientX < innerWidth/2 ? prev() : next(); });
+  show();
+</script>
+</body>
+</html>

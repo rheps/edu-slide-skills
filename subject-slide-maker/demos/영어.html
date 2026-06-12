@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Resilience · 영어 데모</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap');
+
+  /* ===== 영어 테마 ===== */
+  :root {
+    --bg:#fbfaf6; --bg-dark:#14213d; --surface:#ffffff;
+    --text:#1c2230; --text-dark:#e8eaf0; --subtext:#5a6172;
+    --accent:#1e3a8a; --accent-2:#7f1d1d; --accent-3:#a16207;
+    --line:#d8d4c8; --accent-soft:#eef1fb;
+    --font-display:'Playfair Display'; --font-body:'Lora'; --font-ko:'Gowun Batang'; --font-data:'Pretendard';
+  }
+  * { word-break:keep-all; overflow-wrap:break-word; box-sizing:border-box; margin:0; padding:0; }
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); }
+  .slide{ position:absolute; inset:0; width:100vw; height:100vh; overflow:hidden; display:none;
+    flex-direction:column; align-items:center; justify-content:center; padding:5vh 8vw;
+    background:var(--bg); color:var(--text); font-family:var(--font-ko); }
+  .slide.active{ display:flex; } .slide.dark{ background:var(--bg-dark); color:var(--text-dark); }
+  h1{ font-family:var(--font-display); font-weight:800; font-size:7.4vh; line-height:1.1; text-align:center; }
+  .dark h1{ color:#fff; }
+  h2{ font-family:var(--font-display); font-weight:800; font-size:4.6vh; color:var(--accent); text-align:center; }
+  .eyebrow{ font-family:var(--font-display); font-weight:700; font-size:2.2vh; letter-spacing:.04em; color:var(--accent); margin-bottom:2vh; font-style:italic; }
+  .lead{ font-family:var(--font-body); font-style:italic; font-size:2.6vh; color:var(--subtext); margin-top:2.4vh; text-align:center; max-width:64vw; }
+  .dark .lead{ color:#aab3c8; }
+  .num{ font-family:var(--font-data); }
+  .unit-no{ font-family:var(--font-data); font-size:2.6vh; color:#93b4f5; letter-spacing:.1em; }
+  .secnum{ font-family:var(--font-data); font-size:2.4vh; color:#93b4f5; margin-bottom:1.5vh; }
+  .goals{ list-style:none; display:flex; flex-direction:column; gap:2.4vh; margin-top:4vh; }
+  .goals li{ font-size:2.8vh; display:flex; align-items:center; gap:1.4vw; }
+  .goals li::before{ content:""; width:1.6vh; height:1.6vh; background:var(--accent); flex:none; }
+  .fragment{ opacity:0; transition:opacity .4s ease; } .fragment.visible{ opacity:1; }
+
+  /* 지문 + 해석 */
+  .en-passage{ width:72vw; }
+  .ep-en{ font-family:var(--font-body); font-size:3.4vh; line-height:1.6; color:var(--text); }
+  .ep-en u{ text-decoration-color:var(--accent-2); text-underline-offset:.4vh; }
+  .ep-ko{ font-family:var(--font-ko); font-size:2.4vh; color:var(--subtext); margin-top:2.6vh; padding-top:2vh; border-top:2px solid var(--line); }
+
+  /* 어휘 카드 */
+  .en-vocab{ display:flex; gap:2vw; }
+  .ev-card{ width:24vw; background:var(--surface); border:2px solid var(--line); border-top:6px solid var(--accent); border-radius:14px; padding:3.4vh 2vw; }
+  .ev-word{ font-family:var(--font-display); font-weight:800; font-size:3.6vh; color:var(--accent); }
+  .ev-pos{ font-family:var(--font-body); font-style:italic; font-size:2vh; color:var(--accent-3); margin:.4vh 0 1.4vh; }
+  .ev-mean{ font-family:var(--font-ko); font-size:2.6vh; color:var(--text); }
+  .ev-ex{ font-family:var(--font-body); font-style:italic; font-size:2vh; color:var(--subtext); margin-top:1.6vh; line-height:1.5; }
+
+  /* 문법 SVOC */
+  .en-grammar{ text-align:center; }
+  .en-sentence{ font-family:var(--font-body); font-size:4.4vh; line-height:1.8; }
+  .chip{ display:inline-block; color:#fff; border-radius:8px; padding:.3vh 1.2vw; margin:0 .3vw; }
+  .g-s{ background:var(--accent); } .g-v{ background:var(--accent-2); } .g-io{ background:var(--accent-3); } .g-do{ background:#475569; }
+  .g-legend{ margin-top:5vh; display:flex; gap:2vw; justify-content:center; font-family:var(--font-data); font-size:2vh; }
+  .g-legend span{ display:inline-flex; align-items:center; gap:.6vw; color:var(--subtext); }
+  .g-legend i{ width:2vh; height:2vh; border-radius:5px; display:inline-block; }
+
+  /* 대화 */
+  .en-dialog{ display:flex; flex-direction:column; gap:3vh; width:64vw; }
+  .bub{ max-width:70%; padding:2.4vh 2vw; border-radius:18px; font-family:var(--font-body); font-size:2.8vh; position:relative; }
+  .bub .ko{ font-family:var(--font-ko); font-size:2vh; color:var(--subtext); margin-top:1vh; }
+  .bub.left{ align-self:flex-start; background:var(--accent-soft); border-bottom-left-radius:4px; }
+  .bub.right{ align-self:flex-end; background:color-mix(in srgb, var(--accent-2) 12%, var(--surface)); border:1px solid color-mix(in srgb,var(--accent-2) 30%, var(--surface)); border-bottom-right-radius:4px; }
+
+  .keychips{ display:flex; flex-wrap:wrap; gap:1.4vh 1.4vw; justify-content:center; max-width:80vw; margin-top:3vh; }
+  .keychips span{ font-family:var(--font-display); font-weight:700; font-size:2.4vh; color:var(--accent);
+    background:var(--accent-soft); border:2px solid var(--accent); border-radius:8px; padding:1vh 2vw; }
+  .hud{ position:fixed; right:2vw; bottom:2.4vh; font-family:var(--font-data); font-size:1.8vh; color:var(--subtext); z-index:9; }
+</style>
+</head>
+<body>
+
+<section class="slide dark">
+  <div class="unit-no">Lesson 4 · Reading</div>
+  <h1>Resilience</h1>
+  <p class="lead">The power to rise again after we fall</p>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">Goals</div>
+  <ul class="goals">
+    <li class="fragment">핵심 어휘의 뜻과 쓰임을 익힌다</li>
+    <li class="fragment">지문을 읽고 주제를 파악한다</li>
+    <li class="fragment">4형식 문장 구조를 분석한다</li>
+  </ul>
+</section>
+
+<section class="slide dark"><div class="secnum num">1</div><h1>Reading the Text</h1></section>
+
+<!-- 지문 + 해석 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.4vh;">What is resilience?</h2>
+  <div class="en-passage">
+    <div class="ep-en fragment">Resilience is not about never falling. It is the <u>quiet strength</u> that helps us stand up one more time.</div>
+    <div class="ep-ko fragment">회복탄력성은 결코 넘어지지 않는 것이 아니다. 그것은 우리가 한 번 더 일어서게 돕는 조용한 힘이다.</div>
+  </div>
+</section>
+
+<!-- 어휘 카드 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.4vh;">Key Words</h2>
+  <div class="en-vocab">
+    <div class="ev-card fragment"><div class="ev-word">resilient</div><div class="ev-pos">adjective</div><div class="ev-mean">회복력 있는</div><div class="ev-ex">She stayed <i>resilient</i> through hard times.</div></div>
+    <div class="ev-card fragment"><div class="ev-word">overcome</div><div class="ev-pos">verb</div><div class="ev-mean">극복하다</div><div class="ev-ex">He <i>overcame</i> his fear of failure.</div></div>
+    <div class="ev-card fragment"><div class="ev-word">strength</div><div class="ev-pos">noun</div><div class="ev-mean">힘 · 강점</div><div class="ev-ex">True <i>strength</i> grows from struggle.</div></div>
+  </div>
+</section>
+
+<section class="slide dark"><div class="secnum num">2</div><h1>Grammar &amp; Speaking</h1></section>
+
+<!-- 문법 SVOC -->
+<section class="slide">
+  <h2 style="margin-bottom:1vh;">4형식 — 누구에게 무엇을</h2>
+  <div class="en-grammar">
+    <div class="en-sentence fragment">
+      <span class="chip g-s">She</span>
+      <span class="chip g-v">gave</span>
+      <span class="chip g-io">me</span>
+      <span class="chip g-do">hope</span>.
+    </div>
+    <div class="g-legend fragment">
+      <span><i class="g-s"></i> S 주어</span>
+      <span><i class="g-v"></i> V 동사</span>
+      <span><i class="g-io"></i> IO 간접목적어</span>
+      <span><i class="g-do"></i> DO 직접목적어</span>
+    </div>
+  </div>
+</section>
+
+<!-- 대화 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.4vh;">Speaking · Encouraging a friend</h2>
+  <div class="en-dialog">
+    <div class="bub left fragment">I failed the test again.<div class="ko">시험에 또 떨어졌어.</div></div>
+    <div class="bub right fragment">Don't give up. You can try once more!<div class="ko">포기하지 마. 한 번 더 해볼 수 있어!</div></div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">Wrap-up</div><h2>Key Expressions</h2>
+  <div class="keychips">
+    <span class="fragment">resilient</span>
+    <span class="fragment">overcome</span>
+    <span class="fragment">stand up one more time</span>
+    <span class="fragment">Don't give up</span>
+    <span class="fragment">give + IO + DO</span>
+  </div>
+</section>
+
+<div class="hud"><span id="cur" class="num">1</span> / <span id="tot" class="num">10</span></div>
+<script>
+  const slides=[...document.querySelectorAll('.slide')]; const elCur=document.getElementById('cur'), elTot=document.getElementById('tot');
+  let cur=0; elTot.textContent=slides.length;
+  function show(){ slides.forEach((s,i)=>s.classList.toggle('active', i===cur)); elCur.textContent=cur+1; }
+  function frags(s){ return [...s.querySelectorAll('.fragment:not(.visible)')]; }
+  function next(){ const s=slides[cur], f=frags(s); if(f.length){ f[0].classList.add('visible'); return; } if(cur<slides.length-1){ cur++; show(); } }
+  function prev(){ const s=slides[cur], v=[...s.querySelectorAll('.fragment.visible')]; if(v.length){ v[v.length-1].classList.remove('visible'); return; } if(cur>0){ cur--; show(); slides[cur].querySelectorAll('.fragment').forEach(f=>f.classList.add('visible')); } }
+  addEventListener('keydown', e=>{ if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); } else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); } else if(e.key==='Home'){ cur=0; show(); } else if(e.key==='End'){ cur=slides.length-1; show(); } });
+  addEventListener('click', e=>{ e.clientX < innerWidth/2 ? prev() : next(); });
+  show();
+</script>
+</body>
+</html>

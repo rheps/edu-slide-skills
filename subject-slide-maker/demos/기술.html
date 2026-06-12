@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>기술 시스템과 자동화 · 기술 데모</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap');
+
+  /* ===== 기술 테마 ===== */
+  :root {
+    --bg:#f4f4f5; --bg-dark:#18181b; --surface:#ffffff;
+    --text:#18181b; --text-dark:#e4e4e7; --subtext:#52525b;
+    --accent:#ea580c; --accent-2:#0891b2; --accent-3:#dc2626;
+    --line:#d4d4d8; --accent-soft:#fff1ea;
+    --font-display:'Pretendard'; --font-body:'Pretendard'; --font-data:'JetBrains Mono';
+  }
+  * { word-break:keep-all; overflow-wrap:break-word; box-sizing:border-box; margin:0; padding:0; }
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); }
+  .slide{ position:absolute; inset:0; width:100vw; height:100vh; overflow:hidden; display:none;
+    flex-direction:column; align-items:center; justify-content:center; padding:5vh 8vw;
+    background:var(--bg); color:var(--text); font-family:var(--font-body); }
+  .slide.active{ display:flex; } .slide.dark{ background:var(--bg-dark); color:var(--text-dark); }
+  h1{ font-family:var(--font-display); font-weight:800; font-size:7vh; line-height:1.12; text-align:center; }
+  .dark h1{ color:#fff; }
+  h2{ font-family:var(--font-display); font-weight:800; font-size:4.4vh; color:var(--accent); text-align:center; }
+  .eyebrow{ font-family:var(--font-display); font-weight:700; font-size:2.2vh; letter-spacing:.05em; color:var(--accent); margin-bottom:2vh; }
+  .lead{ font-family:var(--font-body); font-size:2.4vh; color:var(--subtext); margin-top:2.4vh; text-align:center; max-width:72vw; }
+  .num{ font-family:var(--font-data); }
+  .unit-no{ font-family:var(--font-data); font-size:3vh; color:#fb923c; letter-spacing:.12em; }
+  .secnum{ font-family:var(--font-data); font-size:2.4vh; color:#fb923c; margin-bottom:1.5vh; }
+  .goals{ list-style:none; display:flex; flex-direction:column; gap:2.2vh; margin-top:4vh; }
+  .goals li{ font-size:2.8vh; display:flex; align-items:center; gap:1.4vw; }
+  .goals li::before{ content:""; width:1.6vh; height:1.6vh; background:var(--accent); flex:none; transform:rotate(45deg); }
+  .fragment{ opacity:0; transition:opacity .4s ease; } .fragment.visible{ opacity:1; }
+  .sa-cap{ font-family:var(--font-body); color:var(--subtext); }
+
+  /* 프로세스 */
+  .sa-process{ display:flex; width:92vw; }
+  .sa-step{ position:relative; flex:1; padding:3vh 1.6vw 3vh 2.8vw; background:var(--accent-soft);
+    clip-path:polygon(0 0, calc(100% - 1.6vw) 0, 100% 50%, calc(100% - 1.6vw) 100%, 0 100%, 1.6vw 50%); margin-right:-1.2vw; }
+  .sa-step:first-child{ clip-path:polygon(0 0, calc(100% - 1.6vw) 0, 100% 50%, calc(100% - 1.6vw) 100%, 0 100%); }
+  .sa-step:nth-child(2n){ background:color-mix(in srgb, var(--accent) 14%, var(--surface)); }
+  .sa-step-no{ display:inline-flex; align-items:center; justify-content:center; width:4.2vh; height:4.2vh; border-radius:8px;
+    background:var(--accent); color:#fff; font-family:var(--font-data); font-weight:700; font-size:2vh; }
+  .sa-step-t{ font-family:var(--font-display); font-weight:800; font-size:2.5vh; margin-top:1.2vh; }
+  .sa-step .sa-cap{ font-size:1.7vh; margin-top:.4vh; }
+
+  /* 허브-스포크 */
+  .sa-hub{ position:relative; width:56vh; height:56vh; }
+  .sa-hub-center{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:2; width:18vh; height:18vh;
+    border-radius:14px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; text-align:center;
+    font-family:var(--font-display); font-weight:800; font-size:2.4vh; }
+  .sa-spoke{ position:absolute; left:50%; top:50%; width:15vh; height:15vh; margin:-7.5vh 0 0 -7.5vh; border-radius:12px;
+    background:var(--accent-soft); border:2px solid var(--accent-2); display:flex; align-items:center; justify-content:center; text-align:center;
+    transform:rotate(calc(360deg / var(--n) * var(--i))) translateY(-21vh) rotate(calc(-360deg / var(--n) * var(--i))); }
+  .sa-spoke span{ font-family:var(--font-display); font-weight:700; font-size:2vh; color:var(--text); }
+
+  /* 타임라인 */
+  .sa-tl{ display:grid; width:88vw; row-gap:1.6vh; }
+  .sa-tl-label{ text-align:center; font-family:var(--font-display); font-weight:800; font-size:2.2vh; color:var(--accent); }
+  .sa-tl-label.cur{ color:var(--accent-2); }
+  .sa-tl-track{ grid-column:1 / -1; display:flex; justify-content:space-around; position:relative; height:4vh; align-items:center; }
+  .sa-tl-line{ position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); height:3px; background:var(--line); }
+  .sa-tl-dot{ width:1.9vh; height:1.9vh; border-radius:50%; background:var(--accent); border:3px solid var(--bg); z-index:1; }
+  .sa-tl-dot.cur{ width:2.6vh; height:2.6vh; background:var(--accent-2); box-shadow:0 0 0 4px color-mix(in srgb, var(--accent-2) 30%, transparent); }
+  .sa-tl-desc{ text-align:center; font-family:var(--font-body); font-size:1.8vh; color:var(--subtext); }
+
+  /* 비교 */
+  .sa-compare{ display:flex; align-items:stretch; gap:2vw; width:80vw; }
+  .sa-cmp-col{ flex:1; background:var(--accent-soft); border-radius:16px; padding:3.4vh 2.4vw; }
+  .sa-cmp-col.alt{ background:color-mix(in srgb, var(--accent-2) 12%, var(--surface)); }
+  .sa-cmp-col h3{ font-family:var(--font-display); font-weight:800; font-size:2.9vh; color:var(--accent); margin-bottom:1.8vh; }
+  .sa-cmp-col.alt h3{ color:var(--accent-2); }
+  .sa-cmp-col li{ font-size:2.2vh; margin:1vh 0; list-style:none; padding-left:1.4vw; position:relative; }
+  .sa-cmp-col li::before{ content:""; position:absolute; left:0; top:1.1vh; width:.9vh; height:.9vh; background:var(--accent); transform:rotate(45deg); }
+  .sa-cmp-col.alt li::before{ background:var(--accent-2); }
+  .sa-cmp-vs{ align-self:center; font-family:var(--font-display); font-weight:800; font-size:3vh; color:var(--subtext); }
+
+  /* 기술 전용: 안전수칙 */
+  .tech-safety{ display:flex; align-items:stretch; gap:2vw; width:72vw; }
+  .ts-bar{ width:2.4vw; border-radius:8px; background:repeating-linear-gradient(45deg, var(--accent-3) 0 2vh, #1f1f1f 2vh 4vh); }
+  .tech-safety ul{ list-style:none; display:flex; flex-direction:column; gap:2.4vh; justify-content:center; }
+  .tech-safety li{ font-size:2.6vh; display:flex; align-items:center; gap:1.4vw; }
+  .warn{ display:inline-flex; align-items:center; justify-content:center; width:4vh; height:4vh; border-radius:50%;
+    background:var(--accent-3); color:#fff; font-family:var(--font-display); font-weight:800; font-size:2.4vh; flex:none; }
+
+  /* 기술 전용: 부품 분해 (콜아웃) */
+  .tech-explode{ position:relative; width:60vh; height:44vh; }
+  .device{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:24vh; height:26vh;
+    background:color-mix(in srgb, var(--accent-2) 14%, var(--surface)); border:3px solid var(--accent-2); border-radius:14px; }
+  .device::after{ content:""; position:absolute; left:50%; top:30%; transform:translateX(-50%); width:60%; height:8%;
+    background:var(--accent); border-radius:4px; }
+  .callout{ position:absolute; background:var(--surface); border:2px solid var(--accent); border-radius:10px; padding:.9vh 1.2vw; font-size:1.9vh; }
+  .callout b{ color:var(--accent); font-family:var(--font-data); }
+
+  .keychips{ display:flex; flex-wrap:wrap; gap:1.4vh 1.4vw; justify-content:center; max-width:80vw; margin-top:3vh; }
+  .keychips span{ font-family:var(--font-display); font-weight:700; font-size:2.4vh; color:var(--accent);
+    background:var(--accent-soft); border:2px solid var(--accent); border-radius:10px; padding:1vh 2vw; }
+  .hud{ position:fixed; right:2vw; bottom:2.4vh; font-family:var(--font-data); font-size:1.8vh; color:var(--subtext); z-index:9; }
+</style>
+</head>
+<body>
+
+<section class="slide dark">
+  <div class="unit-no">단원 3 · 제조와 자동화</div>
+  <h1>기술 시스템과<br>자동화</h1>
+  <p class="lead">입력에서 출력까지 — 기술은 어떻게 하나의 시스템으로 움직이는가</p>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">학습목표</div>
+  <ul class="goals">
+    <li class="fragment">기술 시스템의 4요소를 설명한다</li>
+    <li class="fragment">자동화의 발전 단계를 안다</li>
+    <li class="fragment">수동과 자동 제어의 차이를 비교한다</li>
+  </ul>
+</section>
+
+<section class="slide dark"><div class="secnum num">1</div><h1>기술 시스템의 구조</h1></section>
+
+<!-- 프로세스: 시스템 4요소 -->
+<section class="slide">
+  <h2 style="margin-bottom:4vh;">시스템은 이렇게 움직인다</h2>
+  <div class="sa-process">
+    <div class="sa-step fragment"><span class="sa-step-no">IN</span><div class="sa-step-t">입력</div><p class="sa-cap">에너지 · 자료 · 명령</p></div>
+    <div class="sa-step fragment"><span class="sa-step-no">PR</span><div class="sa-step-t">처리</div><p class="sa-cap">가공 · 변환</p></div>
+    <div class="sa-step fragment"><span class="sa-step-no">OUT</span><div class="sa-step-t">출력</div><p class="sa-cap">제품 · 동작</p></div>
+    <div class="sa-step fragment"><span class="sa-step-no">FB</span><div class="sa-step-t">피드백</div><p class="sa-cap">센서 → 보정</p></div>
+  </div>
+</section>
+
+<!-- 허브: 구성요소 -->
+<section class="slide">
+  <h2 style="margin-bottom:2.5vh;">자동화 시스템의 구성</h2>
+  <div class="sa-hub" style="--n:5;">
+    <div class="sa-hub-center">제어부<br>(컴퓨터)</div>
+    <div class="sa-spoke fragment" style="--i:0;"><span>입력 장치</span></div>
+    <div class="sa-spoke fragment" style="--i:1;"><span>센서</span></div>
+    <div class="sa-spoke fragment" style="--i:2;"><span>구동 장치</span></div>
+    <div class="sa-spoke fragment" style="--i:3;"><span>출력 장치</span></div>
+    <div class="sa-spoke fragment" style="--i:4;"><span>전원부</span></div>
+  </div>
+</section>
+
+<section class="slide dark"><div class="secnum num">2</div><h1>자동화의 발전과 안전</h1></section>
+
+<!-- 타임라인: 자동화 단계 -->
+<section class="slide">
+  <h2 style="margin-bottom:5vh;">자동화는 이렇게 발전했다</h2>
+  <div class="sa-tl" style="grid-template-columns:repeat(4,1fr);">
+    <div class="sa-tl-label">1단계</div><div class="sa-tl-label">2단계</div><div class="sa-tl-label cur">3단계</div><div class="sa-tl-label">4단계</div>
+    <div class="sa-tl-track"><div class="sa-tl-line"></div><div class="sa-tl-dot"></div><div class="sa-tl-dot"></div><div class="sa-tl-dot cur"></div><div class="sa-tl-dot"></div></div>
+    <div class="sa-tl-desc">수공구</div><div class="sa-tl-desc">기계화</div><div class="sa-tl-desc">자동화</div><div class="sa-tl-desc">지능화(AI)</div>
+  </div>
+</section>
+
+<!-- 비교: 수동 vs 자동 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.5vh;">수동 제어 vs 자동 제어</h2>
+  <div class="sa-compare">
+    <div class="sa-cmp-col">
+      <h3>수동 제어</h3>
+      <ul><li class="fragment">사람이 직접 조작</li><li class="fragment">피드백을 사람이 판단</li><li class="fragment">오차·피로 발생</li></ul>
+    </div>
+    <div class="sa-cmp-vs">VS</div>
+    <div class="sa-cmp-col alt">
+      <h3>자동 제어</h3>
+      <ul><li class="fragment">센서가 스스로 감지</li><li class="fragment">제어부가 자동 보정</li><li class="fragment">정밀 · 반복에 강함</li></ul>
+    </div>
+  </div>
+</section>
+
+<!-- 안전수칙 -->
+<section class="slide">
+  <h2 style="margin-bottom:4vh;">작업 전 안전수칙</h2>
+  <div class="tech-safety">
+    <div class="ts-bar"></div>
+    <ul>
+      <li class="fragment"><span class="warn">!</span> 전원을 차단한 뒤 점검한다</li>
+      <li class="fragment"><span class="warn">!</span> 보호장구(장갑·보안경)를 착용한다</li>
+      <li class="fragment"><span class="warn">!</span> 회전부에 손·옷을 가까이 하지 않는다</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 부품 분해 콜아웃 -->
+<section class="slide">
+  <h2 style="margin-bottom:2vh;">3D 프린터 — 주요 부품</h2>
+  <div class="tech-explode">
+    <div class="device"></div>
+    <div class="callout fragment" style="top:4%; left:0;"><b>P-01</b> 노즐(압출부)</div>
+    <div class="callout fragment" style="top:44%; right:-4%;"><b>P-02</b> 스텝 모터</div>
+    <div class="callout fragment" style="bottom:2%; left:6%;"><b>P-03</b> 히팅 베드</div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">단원 정리</div><h2>핵심 키워드</h2>
+  <div class="keychips">
+    <span class="fragment">입력·처리·출력·피드백</span>
+    <span class="fragment">센서 · 제어부</span>
+    <span class="fragment">자동화 4단계</span>
+    <span class="fragment">자동 제어 = 정밀·반복</span>
+    <span class="fragment">안전 먼저</span>
+  </div>
+</section>
+
+<div class="hud"><span id="cur" class="num">1</span> / <span id="tot" class="num">11</span></div>
+<script>
+  const slides=[...document.querySelectorAll('.slide')]; const elCur=document.getElementById('cur'), elTot=document.getElementById('tot');
+  let cur=0; elTot.textContent=slides.length;
+  function show(){ slides.forEach((s,i)=>s.classList.toggle('active', i===cur)); elCur.textContent=cur+1; }
+  function frags(s){ return [...s.querySelectorAll('.fragment:not(.visible)')]; }
+  function next(){ const s=slides[cur], f=frags(s); if(f.length){ f[0].classList.add('visible'); return; } if(cur<slides.length-1){ cur++; show(); } }
+  function prev(){ const s=slides[cur], v=[...s.querySelectorAll('.fragment.visible')]; if(v.length){ v[v.length-1].classList.remove('visible'); return; } if(cur>0){ cur--; show(); slides[cur].querySelectorAll('.fragment').forEach(f=>f.classList.add('visible')); } }
+  addEventListener('keydown', e=>{ if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); } else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); } else if(e.key==='Home'){ cur=0; show(); } else if(e.key==='End'){ cur=slides.length-1; show(); } });
+  addEventListener('click', e=>{ e.clientX < innerWidth/2 ? prev() : next(); });
+  show();
+</script>
+</body>
+</html>

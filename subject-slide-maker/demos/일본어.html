@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>はじめまして · 일본어 데모</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap');
+
+  /* ===== 일본어 테마 ===== */
+  :root {
+    --bg:#f6f1e7; --bg-dark:#1b1b1b; --surface:#fffaf2;
+    --text:#1f1c19; --text-dark:#f2ece0; --subtext:#6f665a;
+    --accent:#c1272d; --accent-2:#1f3a5f; --accent-3:#b8860b;
+    --line:#e0d6c4; --accent-soft:#f7e7e3;
+    --font-display:'Shippori Mincho'; --font-body:'Shippori Mincho'; --font-jp-gothic:'Zen Kaku Gothic New'; --font-ko:'Gowun Batang';
+  }
+  * { word-break:keep-all; overflow-wrap:break-word; box-sizing:border-box; margin:0; padding:0; }
+  html,body{ width:100%; height:100%; overflow:hidden; background:var(--bg); }
+  .slide{ position:absolute; inset:0; width:100vw; height:100vh; overflow:hidden; display:none;
+    flex-direction:column; align-items:center; justify-content:center; padding:5vh 8vw;
+    background:var(--bg); color:var(--text); font-family:var(--font-body); }
+  .slide.active{ display:flex; } .slide.dark{ background:var(--bg-dark); color:var(--text-dark); }
+  h1{ font-family:var(--font-display); font-weight:800; font-size:7.4vh; line-height:1.12; text-align:center; }
+  .dark h1{ color:#fff; }
+  h2{ font-family:var(--font-display); font-weight:800; font-size:4.6vh; color:var(--accent); text-align:center; }
+  .eyebrow{ font-family:var(--font-jp-gothic); font-weight:700; font-size:2.2vh; letter-spacing:.1em; color:var(--accent); margin-bottom:2vh; }
+  .lead{ font-family:var(--font-ko); font-size:2.6vh; color:var(--subtext); margin-top:2.4vh; text-align:center; max-width:64vw; line-height:1.7; }
+  .dark .lead{ color:#c8bfae; }
+  .num{ font-family:var(--font-jp-gothic); }
+  .unit-no{ font-family:var(--font-jp-gothic); font-size:2.4vh; color:#e8a0a3; letter-spacing:.1em; }
+  .secnum{ font-family:var(--font-jp-gothic); font-size:2.4vh; color:#e8a0a3; margin-bottom:1.5vh; }
+  .goals{ list-style:none; display:flex; flex-direction:column; gap:2.4vh; margin-top:4vh; }
+  .goals li{ font-family:var(--font-ko); font-size:2.9vh; display:flex; align-items:center; gap:1.4vw; }
+  .goals li::before{ content:""; width:1.4vh; height:1.4vh; background:var(--accent); flex:none; border-radius:50%; }
+  .fragment{ opacity:0; transition:opacity .4s ease; } .fragment.visible{ opacity:1; }
+  ruby rt{ font-family:var(--font-jp-gothic); font-size:.42em; color:var(--accent); }
+
+  /* 가나표 */
+  .jp-kana{ display:grid; grid-template-columns:repeat(5,1fr); gap:1.6vh 1.4vw; }
+  .kcell{ width:13vh; height:13vh; background:var(--surface); border:2px solid var(--line); border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .kcell b{ font-family:var(--font-display); font-weight:800; font-size:5.4vh; color:var(--accent); line-height:1; }
+  .kcell span{ font-family:var(--font-jp-gothic); font-size:1.9vh; color:var(--subtext); margin-top:.6vh; }
+
+  /* 회화 말풍선 (다크) */
+  .jp-dialog{ display:flex; flex-direction:column; gap:3.4vh; width:62vw; }
+  .bub{ max-width:74%; padding:2.6vh 2.2vw; border-radius:18px; font-family:var(--font-display); font-size:3.4vh; }
+  .bub .ko{ font-family:var(--font-ko); font-size:1.9vh; color:#c8bfae; margin-top:1.2vh; }
+  .bub.left{ align-self:flex-start; background:rgba(193,39,45,.16); border:1px solid rgba(193,39,45,.5); color:#fff; border-bottom-left-radius:4px; }
+  .bub.right{ align-self:flex-end; background:rgba(31,58,95,.28); border:1px solid rgba(120,150,190,.5); color:#fff; border-bottom-right-radius:4px; }
+
+  /* 문형 카드 */
+  .jp-patterns{ display:flex; gap:3vw; }
+  .jp-pattern{ width:32vw; background:var(--surface); border:2px solid var(--line); border-radius:18px; padding:4vh 2.4vw; text-align:center; }
+  .jp-form{ display:inline-block; font-family:var(--font-display); font-weight:800; font-size:3.4vh; color:#fff; background:var(--accent); border-radius:10px; padding:.8vh 1.6vw; }
+  .jp-ex{ font-family:var(--font-display); font-size:3.4vh; margin:2.6vh 0 1.4vh; }
+  .jp-ko{ font-family:var(--font-ko); font-size:2.2vh; color:var(--subtext); }
+
+  .keychips{ display:flex; flex-wrap:wrap; gap:1.4vh 1.4vw; justify-content:center; max-width:80vw; margin-top:3vh; }
+  .keychips span{ font-family:var(--font-display); font-weight:700; font-size:2.6vh; color:var(--accent);
+    background:var(--accent-soft); border:2px solid var(--accent); border-radius:999px; padding:1vh 2vw; }
+  .hud{ position:fixed; right:2vw; bottom:2.4vh; font-family:var(--font-jp-gothic); font-size:1.8vh; color:var(--subtext); z-index:9; }
+</style>
+</head>
+<body>
+
+<section class="slide dark">
+  <div class="unit-no">第1課 · あいさつ</div>
+  <h1>はじめまして</h1>
+  <p class="lead">처음 만난 사람에게 — 일본어로 나를 소개하기</p>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">学習目標</div>
+  <ul class="goals">
+    <li class="fragment">あ행 히라가나를 읽고 쓴다</li>
+    <li class="fragment">기본 인사 표현을 말한다</li>
+    <li class="fragment">「〜です」로 자기를 소개한다</li>
+  </ul>
+</section>
+
+<section class="slide dark"><div class="secnum num">1</div><h1>ひらがな — あ行</h1></section>
+
+<!-- 가나표 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.4vh;">소리부터 익히자</h2>
+  <div class="jp-kana">
+    <div class="kcell fragment"><b>あ</b><span>a</span></div>
+    <div class="kcell fragment"><b>い</b><span>i</span></div>
+    <div class="kcell fragment"><b>う</b><span>u</span></div>
+    <div class="kcell fragment"><b>え</b><span>e</span></div>
+    <div class="kcell fragment"><b>お</b><span>o</span></div>
+    <div class="kcell fragment"><b>か</b><span>ka</span></div>
+    <div class="kcell fragment"><b>き</b><span>ki</span></div>
+    <div class="kcell fragment"><b>く</b><span>ku</span></div>
+    <div class="kcell fragment"><b>け</b><span>ke</span></div>
+    <div class="kcell fragment"><b>こ</b><span>ko</span></div>
+  </div>
+</section>
+
+<section class="slide dark"><div class="secnum num">2</div><h1>あいさつと自己紹介</h1></section>
+
+<!-- 회화 말풍선 (다크) -->
+<section class="slide dark">
+  <h2 style="margin-bottom:3.4vh; color:#e8a0a3;">はじめての会話</h2>
+  <div class="jp-dialog">
+    <div class="bub left fragment"><ruby>初<rt>はじ</rt></ruby>めまして。<ruby>田中<rt>たなか</rt></ruby>です。<div class="ko">처음 뵙겠습니다. 다나카입니다.</div></div>
+    <div class="bub right fragment">どうぞ よろしく おねがいします。<div class="ko">잘 부탁드립니다.</div></div>
+  </div>
+</section>
+
+<!-- 문형 카드 -->
+<section class="slide">
+  <h2 style="margin-bottom:3.4vh;">문형 — 「〜です」</h2>
+  <div class="jp-patterns">
+    <div class="jp-pattern fragment">
+      <div class="jp-form">〜です</div>
+      <div class="jp-ex"><ruby>学生<rt>がくせい</rt></ruby>です。</div>
+      <div class="jp-ko">학생입니다.</div>
+    </div>
+    <div class="jp-pattern fragment">
+      <div class="jp-form">〜は〜です</div>
+      <div class="jp-ex"><ruby>私<rt>わたし</rt></ruby>は<ruby>韓国人<rt>かんこくじん</rt></ruby>です。</div>
+      <div class="jp-ko">저는 한국인입니다.</div>
+    </div>
+  </div>
+</section>
+
+<section class="slide">
+  <div class="eyebrow">まとめ</div><h2>핵심 표현</h2>
+  <div class="keychips">
+    <span class="fragment">はじめまして</span>
+    <span class="fragment">よろしく</span>
+    <span class="fragment">〜です</span>
+    <span class="fragment">私は〜です</span>
+    <span class="fragment">あ行 5음</span>
+  </div>
+</section>
+
+<div class="hud"><span id="cur" class="num">1</span> / <span id="tot" class="num">9</span></div>
+<script>
+  const slides=[...document.querySelectorAll('.slide')]; const elCur=document.getElementById('cur'), elTot=document.getElementById('tot');
+  let cur=0; elTot.textContent=slides.length;
+  function show(){ slides.forEach((s,i)=>s.classList.toggle('active', i===cur)); elCur.textContent=cur+1; }
+  function frags(s){ return [...s.querySelectorAll('.fragment:not(.visible)')]; }
+  function next(){ const s=slides[cur], f=frags(s); if(f.length){ f[0].classList.add('visible'); return; } if(cur<slides.length-1){ cur++; show(); } }
+  function prev(){ const s=slides[cur], v=[...s.querySelectorAll('.fragment.visible')]; if(v.length){ v[v.length-1].classList.remove('visible'); return; } if(cur>0){ cur--; show(); slides[cur].querySelectorAll('.fragment').forEach(f=>f.classList.add('visible')); } }
+  addEventListener('keydown', e=>{ if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){ e.preventDefault(); next(); } else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); prev(); } else if(e.key==='Home'){ cur=0; show(); } else if(e.key==='End'){ cur=slides.length-1; show(); } });
+  addEventListener('click', e=>{ e.clientX < innerWidth/2 ? prev() : next(); });
+  show();
+</script>
+</body>
+</html>
