@@ -1,6 +1,6 @@
 # 교과별 테마 (색 · 폰트 · 모티프)
 
-이 파일은 8개 교과 각각의 **시각 정체성**을 정의한다. 한 슬라이드 덱은 **하나의 교과 테마**를 고른 뒤, 그 교과의 CSS 변수 블록과 폰트 `@import`를 그대로 복사해서 쓴다.
+이 파일은 10개 교과 각각의 **시각 정체성**을 정의한다. 한 슬라이드 덱은 **하나의 교과 테마**를 고른 뒤, 그 교과의 CSS 변수 블록과 폰트 `@import`를 그대로 복사해서 쓴다.
 
 핵심 원칙:
 
@@ -216,6 +216,54 @@
 - **라벨/분류번호**: Pretendard (KDC 번호 태그)
 - **모티프**: 책등(spine) 줄, 분류 라벨 태그, 카드목록 괘선. 다크는 깊은 녹회색
 
+## 9. 역사 (History) — 한국사·동양사·서양사 공용
+
+세피아 톤의 따뜻함. 교과서 이미지(대부분 갈색/세피아)와 충돌하지 않는 차분한 사료(史料)의 색. 한국사·동양사·서양사 모두 이 한 테마를 공용으로 쓴다. 역사는 서사·이야기 중심이라 본문 명조(Gowun Batang)의 비중이 다른 교과보다 높다.
+
+```css
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap');
+:root {
+  --bg:#faf8f5; --bg-dark:#1c1917; --surface:#fffdf9;
+  --text:#292524; --text-dark:#f0ebe5; --subtext:#78716c;
+  --accent:#92400e;      /* 앰버/호박 (역사적 따뜻함) */
+  --accent-2:#166534;    /* 짙은 녹 (성장·발전) */
+  --accent-3:#991b1b;    /* 짙은 적 (전쟁·위기·쇠퇴) */
+  --line:#d6d3d1; --accent-soft:#f5ece2;
+  --font-display:'Pretendard'; --font-body:'Gowun Batang'; --font-data:'Pretendard';
+}
+```
+
+- **디스플레이/숫자/라벨**: Pretendard (연도·제목·키워드)
+- **서술/사료 해석/인용**: Gowun Batang 700 — "~했다", "~이었다" 서술체는 전부 이 폰트
+- **모티프**: 세피아 양피지 결, 연표(타임라인), 사료 박스. 라이트/다크 교차로 시각적 리듬을 주고, 소단원 전환·사료 원문은 다크(`--bg-dark`)로 구분
+- **시기 색 규칙**: 성장·발전 국면은 `--accent-2`(녹), 전쟁·위기·쇠퇴 국면은 `--accent-3`(적)으로 톤을 구분하면 시대 흐름이 읽힌다
+
+## 10. 사회 (Social Studies) — 통합사회·정치·경제·법·사회문화·지리 공용
+
+공공·시민·통계의 차분한 톤. 통합사회, 정치와 법, 경제, 사회·문화, 지리까지 **하나의 공용 테마**로 폭넓게 쓴다. 도표·통계·지표가 많은 교과라 수치는 모노스페이스로 또렷하게.
+
+```css
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap');
+:root {
+  --bg:#f4f8f8; --bg-dark:#102a28; --surface:#ffffff;
+  --text:#13201f; --text-dark:#e4eeec; --subtext:#4b5d5a;
+  --accent:#0f766e;      /* 청록 (공공·시민·통계) */
+  --accent-2:#d97706;    /* 앰버골드 (경제·시장·통화) */
+  --accent-3:#be123c;    /* 로즈적 (갈등·대립·격차) */
+  --line:#cdd9d7; --accent-soft:#e6f3f1;
+  --font-display:'Pretendard'; --font-body:'Pretendard'; --font-data:'IBM Plex Mono'; --font-quote:'Gowun Batang';
+}
+```
+
+- **디스플레이/본문**: Pretendard (개념·통계 중심의 깔끔한 고딕)
+- **데이터 폰트**: IBM Plex Mono — 통계 수치, 지표, 비율, 연도, 표의 숫자에만
+- **사례·서술 인용**: Gowun Batang(`--font-quote`) — 헌법 조문·판례·사례 글
+- **모티프**: 지도·통계 차트(막대·꺾은선), 시민/공공 도형, 도표 눈금. 다크는 깊은 청록회색(#102a28) — 핵심 통계·쟁점 한 장에
+- **영역 색 규칙**: 경제(시장·수요공급)는 `--accent-2`(골드), 정치·갈등·격차는 `--accent-3`(적)으로 영역을 색으로 구분하면 읽기 쉽다
+
 ---
 
 ## 테마 빠른 표
@@ -230,6 +278,8 @@
 | 기술 | 주황 #ea580c | 스틸시안 #0891b2 | 경고적 #dc2626 | Pretendard | Pretendard (+JetBrains Mono) | 청사진·기어·빗금 |
 | 진로 | 그린 #16a34a | 오렌지 #f59e0b | 블루 #2563eb | Pretendard | Gowun Dodum | 로드맵·상승화살 |
 | 사서 | 포레스트 #15803d | 우드 #92400e | 골드 #a16207 | Noto Serif KR | Gowun Batang | 책등·분류태그 |
+| 역사 | 앰버 #92400e | 짙은녹 #166534 | 짙은적 #991b1b | Pretendard | Gowun Batang | 세피아·연표·사료박스 |
+| 사회 | 청록 #0f766e | 앰버골드 #d97706 | 로즈적 #be123c | Pretendard | Pretendard (+IBM Plex Mono) | 지도·통계차트·공공 |
 
 ---
 
@@ -245,5 +295,7 @@
 - 기술: 시스템 전체 조감
 - 진로: 비전·목표 선언
 - 사서: 핵심 분류 체계 개관
+- 역사: 사료(史料) 원문 인용·소단원 전환
+- 사회: 핵심 통계·쟁점(헌법 조문·갈등 사례) 제시
 
 다크 배경에서는 텍스트를 `var(--text-dark)`, 강조는 각 교과 메인색을 한 톤 밝게 쓴다.
